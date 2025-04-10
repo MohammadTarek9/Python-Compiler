@@ -21,6 +21,7 @@ def myFunction(x, y=10):
     "hi"
 
     myList = [1, 2, 3]
+    mychar = 'a'
     for i in myList:
         print(i)
     mySet = {4, 5, 6}
