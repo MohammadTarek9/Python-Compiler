@@ -681,7 +681,7 @@ private:
             }
             else
             {
-                symbolTable.table[name].usageCount++;
+                symbolTable.table[fullName].usageCount++;
             }
             i++;
             return {knownType, knownType == "unknown" ? "" : knownValue};

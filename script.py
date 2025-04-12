@@ -22,7 +22,10 @@ def myFunction(x, y=10):
 
     myList = [1, 2, 3]
     list2 = [4, 5, 6]
-    list3 = myList + list2 
+    list3 = myList + list2
+    wqt = 5
+    wrt = 10
+    qq = wqt + wrt 
     print(list3)
     mychar = 'a'
     for i in myList:
@@ -58,6 +61,9 @@ def main():
     q = ~y
     r = 20.5
     r**= 2.5
+    wqt = 5
+    wrt = 10
+    qq = wqt + wrt
     haga_bayna_aktar = 0.5
     print(f"Test3: {test3}")
     print(result)
