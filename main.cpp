@@ -187,7 +187,7 @@ public:
         {"yield", TokenType::YieldKeyword}
     };
 
-    // Some common single/multi-character operators
+    // Some common single/multi/triple-character operators
     unordered_set<string> operators = {
         "+", "-", "*", "/", "%", "//", "**", "=", "==", "!=", "<", "<=", ">", 
         ">=", "+=", "-=", "*=", "/=", "%=", "//=", "**=","|", "&", "^", "~", "<<", ">>"};
@@ -297,7 +297,18 @@ public:
             // Handle operators (simple version)
             if (isOperatorStart(c))
             {
-                // Check 2-char operators first
+                //check 3-char operators first
+                if ((i + 2) < source.size())
+                {
+                    string threeChars = source.substr(i, 3);
+                    if (operators.find(threeChars) != operators.end())
+                    {
+                        tokens.push_back(Token(TokenType::OPERATOR, threeChars, lineNumber));
+                        i += 3;
+                        continue;
+                    }
+                }
+                // Check 2-char operators
                 if ((i + 1) < source.size())
                 {
                     string twoChars = source.substr(i, 2);
@@ -415,7 +426,7 @@ private:
 
     bool isOperatorStart(char c)
     {
-        regex operatorRegex("[+\\-*/%=!<>]");
+        regex operatorRegex("[~+\\-*/%=!<>&|^]");
         return regex_match(string(1, c), operatorRegex);
     }
 
