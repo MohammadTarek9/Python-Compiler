@@ -21,6 +21,13 @@ def myFunction(x, y=10):
     "hi"
 
     myList = [1, 2, 3]
+    list2 = [4, 5, 6]
+    list3 = myList + list2
+    wqt = 5
+    wrt = 10
+    qq = wqt + wrt 
+    print(list3)
+    mychar = 'a'
     for i in myList:
         print(i)
     mySet = {4, 5, 6}
@@ -49,11 +56,19 @@ def main():
     test = True
     test2 = False
     test3 = test | test2
-    #y = x << 2 # This is a bitwise left shift operation
-    #z = y >> 1 # This is a bitwise right shift operation
-    #q = ~y
+    y = x << 2 # This is a bitwise left shift operation
+    z = y >> 1 # This is a bitwise right shift operation
+    q = ~y
     r = 20.5
+    r**= 2.5
+    wqt = 5
+    wrt = 10
+    qq = wqt + wrt
+    aaa, bbb = 1, 2
+    rrr,sss="hey","hello"
+    alpha,beta,gamma = 5,6,7
     haga_bayna_aktar = 0.5
+    qwqwqw, rrr = [1, 2], [3, 4]
     print(f"Test3: {test3}")
     print(result)
 if __name__ == "__main__":
