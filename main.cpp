@@ -510,6 +510,56 @@ public:
                 }
                 else
                 {
+                    // handle multiple assignment like x,y = 2,3 -> assigns x = 2 and y = 3
+                    size_t temp = i;
+                    vector<Token> lhsIdentifiers;
+                    while (temp < tokens.size()) {
+                        if (tokens[temp].type == TokenType::IDENTIFIER) {
+                            lhsIdentifiers.push_back(tokens[temp]);
+                            temp++;
+                            if (temp < tokens.size() && tokens[temp].type == TokenType::Comma) {
+                                temp++;
+                            } else {
+                                break;
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+
+                    if (temp < tokens.size() && tokens[temp].type == TokenType::OPERATOR && tokens[temp].lexeme == "=") {
+                        temp++;
+                        vector<pair<string, string>> rhsValues;
+                        while (temp < tokens.size()) {
+                            auto [type, value] = parseExpression(temp);
+                            rhsValues.push_back({type, value});
+                            if (temp < tokens.size() && tokens[temp].type == TokenType::Comma) {
+                                temp++;
+                            } else {
+                                break;
+                            }
+                        }
+
+                        for (size_t j = 0; j < lhsIdentifiers.size(); ++j) {
+                            const Token &var = lhsIdentifiers[j];
+                            string key = var.lexeme + "@" + var.scope;
+                            if (!symbolTable.exist(var.lexeme, var.scope)) {
+                                symbolTable.addSymbol(var.lexeme, "unknown", var.lineNumber, var.scope);
+                            } else {
+                                symbolTable.table[key].usageCount++;
+                            }
+                            if (j < rhsValues.size()) {
+                                if (rhsValues[j].first != "unknown") {
+                                    symbolTable.updateType(var.lexeme, var.scope, rhsValues[j].first);
+                                }
+                                if (!rhsValues[j].second.empty()) {
+                                    symbolTable.updateValue(var.lexeme, var.scope, rhsValues[j].second);
+                                }
+                            }
+                        }
+                        i = temp;
+                        continue;
+                    }
                     // Check if next token is '=' (assignment)
                     if ((i + 1) < tokens.size() &&
                         tokens[i + 1].type == TokenType::OPERATOR &&

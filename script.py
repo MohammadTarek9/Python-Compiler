@@ -64,7 +64,11 @@ def main():
     wqt = 5
     wrt = 10
     qq = wqt + wrt
+    aaa, bbb = 1, 2
+    rrr,sss="hey","hello"
+    alpha,beta,gamma = 5,6,7
     haga_bayna_aktar = 0.5
+    qwqwqw, rrr = [1, 2], [3, 4]
     print(f"Test3: {test3}")
     print(result)
 if __name__ == "__main__":
