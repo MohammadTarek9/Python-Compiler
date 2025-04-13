@@ -15,13 +15,57 @@ using namespace std;
 // ----------------------------------------------
 enum class TokenType
 {
-    FalseKeyword, NoneKeyword, TrueKeyword, AndKeyword, AsKeyword, AssertKeyword, AsyncKeyword, AwaitKeyword,
-    BreakKeyword, ClassKeyword, ContinueKeyword, DefKeyword, DelKeyword, ElifKeyword, ElseKeyword, ExceptKeyword,
-    FinallyKeyword, ForKeyword, FromKeyword, GlobalKeyword, IfKeyword, ImportKeyword, InKeyword, IsKeyword,
-    LambdaKeyword, NonlocalKeyword, NotKeyword, OrKeyword, PassKeyword, RaiseKeyword, ReturnKeyword, TryKeyword,
-    WhileKeyword, WithKeyword, YieldKeyword, 
-    IDENTIFIER, NUMBER, OPERATOR , STRING_LITERAL, COMMENT, UNKNOWN, LeftParenthesis, RightParenthesis,
-    LeftBracket, RightBracket, LeftBrace, RightBrace, Colon, Comma, Dot, Semicolon
+    FalseKeyword,
+    NoneKeyword,
+    TrueKeyword,
+    AndKeyword,
+    AsKeyword,
+    AssertKeyword,
+    AsyncKeyword,
+    AwaitKeyword,
+    BreakKeyword,
+    ClassKeyword,
+    ContinueKeyword,
+    DefKeyword,
+    DelKeyword,
+    ElifKeyword,
+    ElseKeyword,
+    ExceptKeyword,
+    FinallyKeyword,
+    ForKeyword,
+    FromKeyword,
+    GlobalKeyword,
+    IfKeyword,
+    ImportKeyword,
+    InKeyword,
+    IsKeyword,
+    LambdaKeyword,
+    NonlocalKeyword,
+    NotKeyword,
+    OrKeyword,
+    PassKeyword,
+    RaiseKeyword,
+    ReturnKeyword,
+    TryKeyword,
+    WhileKeyword,
+    WithKeyword,
+    YieldKeyword,
+    IDENTIFIER,
+    NUMBER,
+    OPERATOR,
+    STRING_LITERAL,
+    COMMENT,
+    UNKNOWN,
+    LeftParenthesis,
+    RightParenthesis,
+    LeftBracket,
+    RightBracket,
+    LeftBrace,
+    RightBrace,
+    Colon,
+    Comma,
+    Dot,
+    Semicolon
 };
 
 // ----------------------------------------------
@@ -62,65 +106,72 @@ public:
                    int lineNumber, const string &scope,
                    const string &val = "")
     {
-    // Create a unique key consisting of  the name and scope
-    string uniqueKey = name + "@" + scope;
+        // Create a unique key consisting of  the name and scope
+        string uniqueKey = name + "@" + scope;
 
-    auto it = table.find(uniqueKey);
-    if (it == table.end())
-    {
-        // If this symbol hasn't appeared before, create an entry
-        SymbolInfo info;
-        info.type = type;
-        info.scope = scope;
-        info.firstAppearance = lineNumber;
-        info.usageCount = 1;
-        info.value = val;
-        table[uniqueKey] = info;
-    }
-    else
-    {
-        // If the symbol already exists in the same scope, update its information
-        it->second.usageCount++;
-        // If the type was unknown before, or if we want to override it, do so:
-        if (it->second.type == "unknown" && type != "unknown")
+        auto it = table.find(uniqueKey);
+        if (it == table.end())
         {
-            it->second.type = type;
+            // If this symbol hasn't appeared before, create an entry
+            SymbolInfo info;
+            info.type = type;
+            info.scope = scope;
+            info.firstAppearance = lineNumber;
+            info.usageCount = 1;
+            info.value = val;
+            table[uniqueKey] = info;
         }
-        // Update the value if we explicitly have a new one
-        if (!val.empty())
+        else
         {
-            it->second.value = val;
+            // If the symbol already exists in the same scope, update its information
+            it->second.usageCount++;
+            // If the type was unknown before, or if we want to override it, do so:
+            if (it->second.type == "unknown" && type != "unknown")
+            {
+                it->second.type = type;
+            }
+            // Update the value if we explicitly have a new one
+            if (!val.empty())
+            {
+                it->second.value = val;
+            }
         }
-    }
     }
 
     // Allows updating a symbol's type after creation.
-    void updateType(const string &name, const string &scope, const string &newType) {
+    void updateType(const string &name, const string &scope, const string &newType)
+    {
         string key = name + "@" + scope;
-        if (table.find(key) != table.end()) {
+        if (table.find(key) != table.end())
+        {
             table[key].type = newType;
         }
     }
 
     // Allows updating a symbol's literal value after creation.
-    void updateValue(const string &name, const string &scope, const string &newValue) {
+    void updateValue(const string &name, const string &scope, const string &newValue)
+    {
         string key = name + "@" + scope;
-        if (table.find(key) != table.end()) {
+        if (table.find(key) != table.end())
+        {
             table[key].value = newValue;
         }
     }
 
     // Retrieve the type of a symbol if it exists
-    bool exist(const string &name, const string &scope) {
+    bool exist(const string &name, const string &scope)
+    {
         return table.find(name + "@" + scope) != table.end();
     }
 
-    string getType(const string &name, const string &scope) {
+    string getType(const string &name, const string &scope)
+    {
         auto it = table.find(name + "@" + scope);
         return it != table.end() ? it->second.type : "unknown";
     }
 
-    string getValue(const string &name, const string &scope) {
+    string getValue(const string &name, const string &scope)
+    {
         auto it = table.find(name + "@" + scope);
         return it != table.end() ? it->second.value : "";
     }
@@ -128,7 +179,8 @@ public:
     void printSymbols()
     {
         cout << "Symbol Table:\n";
-        for (auto &[key, info] : table) {
+        for (auto &[key, info] : table)
+        {
             auto at = key.find('@');
             string name = key.substr(0, at);
             string scope = key.substr(at + 1);
@@ -137,7 +189,8 @@ public:
                  << ", Type: " << info.type
                  << ", First Appearance: Line " << info.firstAppearance
                  << ", Usage Count: " << info.usageCount;
-            if (!info.value.empty()) cout << ", Value: " << info.value;
+            if (!info.value.empty())
+                cout << ", Value: " << info.value;
             cout << "\n";
         }
     }
@@ -184,13 +237,12 @@ public:
         {"try", TokenType::TryKeyword},
         {"while", TokenType::WhileKeyword},
         {"with", TokenType::WithKeyword},
-        {"yield", TokenType::YieldKeyword}
-    };
+        {"yield", TokenType::YieldKeyword}};
 
     // Some common single/multi/triple-character operators
     unordered_set<string> operators = {
-        "+", "-", "*", "/", "%", "//", "**", "=", "==", "!=", "<", "<=", ">", 
-        ">=", "+=", "-=", "*=", "/=", "%=", "//=", "**=","|", "&", "^", "~", "<<", ">>"};
+        "+", "-", "*", "/", "%", "//", "**", "=", "==", "!=", "<", "<=", ">",
+        ">=", "+=", "-=", "*=", "/=", "%=", "//=", "**=", "|", "&", "^", "~", "<<", ">>"};
 
     // Common delimiters
     unordered_map<char, TokenType> punctuationSymbols = {
@@ -203,8 +255,7 @@ public:
         {']', TokenType::RightBracket},
         {'{', TokenType::LeftBrace},
         {'}', TokenType::RightBrace},
-        {';', TokenType::Semicolon}
-    };
+        {';', TokenType::Semicolon}};
 
     string currentScope = "global";
 
@@ -266,30 +317,32 @@ public:
                 if (pythonKeywords.find(word) != pythonKeywords.end())
                 {
                     // change the scope if it is a function or class
-                    if(word == "def" || word == "class"){
+                    if (word == "def" || word == "class")
+                    {
                         tokens.push_back(Token(pythonKeywords[word], word, lineNumber));
                         skipWhitespace(source, i);
                         size_t identifierStart = i;
                         while (i < source.size() && (isalnum(static_cast<unsigned char>(source[i])) || source[i] == '_'))
+                        {
+                            i++;
+                        }
+                        if (identifierStart < i)
+                        {
+                            string identifier = source.substr(identifierStart, i - identifierStart);
+                            currentScope = identifier;
+                            // cout<<"Current scope: " << currentScope << endl;
+                            tokens.push_back(Token(TokenType::IDENTIFIER, identifier, lineNumber, currentScope));
+                        }
+                    }
+                    else
                     {
-                        i++;
-                    }
-                    if (identifierStart < i)
-                    {
-                        string identifier = source.substr(identifierStart, i - identifierStart);
-                        currentScope = identifier;
-                        //cout<<"Current scope: " << currentScope << endl;
-                        tokens.push_back(Token(TokenType::IDENTIFIER, identifier, lineNumber, currentScope));
-                    }
-                    }
-                    else{
                         tokens.push_back(Token(pythonKeywords[word], word, lineNumber));
                     }
                 }
                 else
                 {
                     tokens.push_back(Token(TokenType::IDENTIFIER, word, lineNumber, currentScope));
-                    //cout<< "scope of " << word << " is " << currentScope << endl;
+                    // cout<< "scope of " << word << " is " << currentScope << endl;
                 }
                 continue;
             }
@@ -297,7 +350,7 @@ public:
             // Handle operators (simple version)
             if (isOperatorStart(c))
             {
-                //check 3-char operators first
+                // check 3-char operators first
                 if ((i + 2) < source.size())
                 {
                     string threeChars = source.substr(i, 3);
@@ -513,46 +566,65 @@ public:
                     // handle multiple assignment like x,y = 2,3 -> assigns x = 2 and y = 3
                     size_t temp = i;
                     vector<Token> lhsIdentifiers;
-                    while (temp < tokens.size()) {
-                        if (tokens[temp].type == TokenType::IDENTIFIER) {
+                    while (temp < tokens.size())
+                    {
+                        if (tokens[temp].type == TokenType::IDENTIFIER)
+                        {
                             lhsIdentifiers.push_back(tokens[temp]);
                             temp++;
-                            if (temp < tokens.size() && tokens[temp].type == TokenType::Comma) {
+                            if (temp < tokens.size() && tokens[temp].type == TokenType::Comma)
+                            {
                                 temp++;
-                            } else {
+                            }
+                            else
+                            {
                                 break;
                             }
-                        } else {
+                        }
+                        else
+                        {
                             break;
                         }
                     }
 
-                    if (temp < tokens.size() && tokens[temp].type == TokenType::OPERATOR && tokens[temp].lexeme == "=") {
+                    if (temp < tokens.size() && tokens[temp].type == TokenType::OPERATOR && tokens[temp].lexeme == "=")
+                    {
                         temp++;
                         vector<pair<string, string>> rhsValues;
-                        while (temp < tokens.size()) {
+                        while (temp < tokens.size())
+                        {
                             auto [type, value] = parseExpression(temp);
                             rhsValues.push_back({type, value});
-                            if (temp < tokens.size() && tokens[temp].type == TokenType::Comma) {
+                            if (temp < tokens.size() && tokens[temp].type == TokenType::Comma)
+                            {
                                 temp++;
-                            } else {
+                            }
+                            else
+                            {
                                 break;
                             }
                         }
 
-                        for (size_t j = 0; j < lhsIdentifiers.size(); ++j) {
+                        for (size_t j = 0; j < lhsIdentifiers.size(); ++j)
+                        {
                             const Token &var = lhsIdentifiers[j];
                             string key = var.lexeme + "@" + var.scope;
-                            if (!symbolTable.exist(var.lexeme, var.scope)) {
+                            if (!symbolTable.exist(var.lexeme, var.scope))
+                            {
                                 symbolTable.addSymbol(var.lexeme, "unknown", var.lineNumber, var.scope);
-                            } else {
+                            }
+                            else
+                            {
                                 symbolTable.table[key].usageCount++;
                             }
-                            if (j < rhsValues.size()) {
-                                if (rhsValues[j].first != "unknown") {
+                            if (j < rhsValues.size())
+                            {
+                                if (rhsValues[j].first != "unknown")
+                                {
                                     symbolTable.updateType(var.lexeme, var.scope, rhsValues[j].first);
                                 }
-                                if (!rhsValues[j].second.empty()) {
+                                if (!rhsValues[j].second.empty())
+                                {
                                     symbolTable.updateValue(var.lexeme, var.scope, rhsValues[j].second);
                                 }
                             }
@@ -587,7 +659,7 @@ public:
                         // Update the LHS symbol with the inferred type/value
                         if (rhsType != "unknown")
                         {
-                            symbolTable.updateType(lhsName,tk.scope, rhsType);
+                            symbolTable.updateType(lhsName, tk.scope, rhsType);
                         }
                         if (!rhsValue.empty())
                         {
@@ -600,6 +672,10 @@ public:
                         if (symbolTable.exist(tk.lexeme, tk.scope))
                         {
                             symbolTable.table[tk.lexeme + "@" + tk.scope].usageCount++;
+                        }
+                        else
+                        {
+                            symbolTable.addSymbol(tk.lexeme + "@" + tk.scope, "unknown", tk.lineNumber, tk.scope);
                         }
                         i++;
                     }
