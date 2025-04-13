@@ -185,7 +185,7 @@ public:
             string name = key.substr(0, at);
             string scope = key.substr(at + 1);
             cout << "Name: " << name
-                 << ", Scope: " << scope
+                 << ", Scope: " << info.scope
                  << ", Type: " << info.type
                  << ", First Appearance: Line " << info.firstAppearance
                  << ", Usage Count: " << info.usageCount;
