@@ -645,6 +645,11 @@ public:
                         {
                             symbolTable.table[tk.lexeme + "@" + tk.scope].usageCount++;
                         }
+
+                        else
+                        {
+                            symbolTable.addSymbol(tk.lexeme, "unknown", tk.lineNumber, tk.scope);
+                        }
                         i++;
                     }
                 }
