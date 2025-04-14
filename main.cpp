@@ -83,6 +83,36 @@ struct Token
 };
 
 // ----------------------------------------------
+// 2. Error Structure
+// ----------------------------------------------
+struct Error {
+    string message;
+    int line;
+    size_t position;
+
+    void print() const {
+        cerr << "Error at line " << line << ", position " << position 
+             << ": " << message << endl;
+    }
+};
+
+// printing errors  
+void printErrors(const vector<Error>& errors) {
+    if (errors.empty()) {
+        cout << "\nNo errors found during tokenization." << endl;
+        return;
+    }
+
+    cerr << "\nTokenization errors (" << errors.size() << "):" << endl;
+    for (const auto& error : errors) {
+        error.print();
+    }
+}
+
+// Exception for string handling
+class UnterminatedStringError : public std::exception {};
+
+// ----------------------------------------------
 // 3. Symbol Table
 // ----------------------------------------------
 class SymbolTable
@@ -253,7 +283,7 @@ public:
     string currentScope = "global";
 
     // The tokenize() function produces tokens without modifying the symbol table.
-    vector<Token> tokenize(const string &source)
+    vector<Token> tokenize(const string &source, vector<Error> &errors)
     {
         vector<Token> tokens;
         int lineNumber = 1;
@@ -286,14 +316,23 @@ public:
             }
 
             int startlineNumber = lineNumber;
-            string triplestring = handleTripleQuotedString(source, i, lineNumber);
-            // Handle triple-quoted strings
-            if (triplestring.length())
+            try
             {
-                tokens.push_back(Token(
-                    TokenType::STRING_LITERAL,
-                    triplestring,
-                    startlineNumber));
+                string triplestring = handleTripleQuotedString(source, i, lineNumber);
+                // Handle triple-quoted strings
+                if (triplestring.length())
+                {
+                    tokens.push_back(Token(
+                        TokenType::STRING_LITERAL,
+                        triplestring,
+                        startlineNumber));
+                    continue;
+                }
+            }
+            catch(const UnterminatedStringError &)
+            {
+                errors.push_back({"Unterminated triple-quoted string", lineNumber, i});
+                i = source.size();
                 continue;
             }
 
@@ -373,13 +412,22 @@ public:
                 }
             }
 
-            // Handle string literals (single/double quotes)
+            // Handle string literals with error checking
             if (c == '"' || c == '\'')
             {
-                tokens.push_back(Token(
-                    TokenType::STRING_LITERAL,
-                    readStringLiteral(source, i, lineNumber),
-                    lineNumber));
+                try 
+                {
+                    string str = readStringLiteral(source, i, lineNumber);
+                    tokens.push_back(Token(
+                        TokenType::STRING_LITERAL,
+                        str,
+                        lineNumber));
+                }
+                catch (const UnterminatedStringError &)
+                {
+                    errors.push_back({"Unterminated string literal", lineNumber, i});
+                    i = source.size();
+                }
                 continue;
             }
 
@@ -409,8 +457,8 @@ public:
                 continue;
             }
 
-            // Otherwise treat as UNKNOWN
-            tokens.push_back(Token(TokenType::UNKNOWN, string(1, c), lineNumber));
+            // Unknown character - add error but keep going
+            errors.push_back({"Invalid character '" + string(1, c) + "'", lineNumber, i});
             i++;
         }
 
@@ -435,7 +483,6 @@ private:
 
     string handleTripleQuotedString(const string &source, size_t &idx, int &lineNumber)
     {
-        string mystring = "\"\"\" ";
         if (idx + 2 < source.size())
         {
             char c = source[idx];
@@ -444,25 +491,34 @@ private:
                 source[idx + 2] == c)
             {
                 char quoteChar = c;
+                size_t start = idx;
                 idx += 3; // skip opening triple quotes
                 while (idx + 2 < source.size())
                 {
-                    mystring += source[idx];
-                    if (source[idx] == '\n')
+                    if (source[idx] == '\\') {
+                        idx++; // Skip the escape character (actual handling depends on your needs)
+                    }
+                    else if (source[idx] == '\n')
                     {
                         lineNumber++;
+                        idx++;
+                    }
+                    else if (source[idx] == '\r' && idx+1 < source.size() && source[idx+1] == '\n') {
+                        lineNumber++;
+                        idx++; // Skip \r\n
                     }
                     if (source[idx] == quoteChar &&
                         source[idx + 1] == quoteChar &&
                         source[idx + 2] == quoteChar)
                     {
                         idx += 3; // skip closing triple quotes
-                        mystring += "\"\"";
-                        break;
+                        return source.substr(start, idx - start); // Include closing quotes
                     }
                     idx++;
                 }
-                return mystring;
+                // If we get here, the string was never closed
+                idx = start;
+                throw UnterminatedStringError();
             }
         }
         return "";
@@ -502,8 +558,8 @@ private:
         else
         {
             // Handle unterminated string
-            idx = source.size();
-            return source.substr(start);
+            idx = start;
+            throw UnterminatedStringError();
         }
     }
 };
@@ -939,9 +995,10 @@ int main()
         // 1. Read Python-like source code from an external file
         string sourceCode = readFile("script.py");
 
+        vector<Error> errors;
         // 2. Lexical analysis: produce tokens
         Lexer lexer;
-        vector<Token> tokens = lexer.tokenize(sourceCode);
+        vector<Token> tokens = lexer.tokenize(sourceCode, errors);
 
         // 3. Print out tokens (for demonstration)
         cout << "Tokens:\n";
@@ -1115,6 +1172,9 @@ int main()
 
         // 5. Print final symbol table
         symTable.printSymbols();
+
+        // print errors
+        printErrors(errors);
     }
     catch (const exception &ex)
     {
