@@ -406,7 +406,7 @@ public:
                     i++;
                 }
                 string num = source.substr(start, i - start);
-                if (num[0] == '0' && !hasDot && num.length() > 1)
+                if (num[0] == '0' && std::stoi(num) != 0 && !hasDot )
                 {
                     errors.push_back({"leading zeros in decimal integer literals are not permitted", lineNumber, start});
                     continue;
