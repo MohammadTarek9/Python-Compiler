@@ -66,7 +66,14 @@ void printErrors(const vector<Error>& errors) {
 }
 
 // Exception for string handling
-class UnterminatedStringError : public std::exception {};
+class UnterminatedStringError : public std::exception {
+    public:
+        int line_number;
+        size_t index;
+        // Constructor that takes line number and index
+        UnterminatedStringError(int line, int idx) 
+        : line_number(line), index(idx) {}
+};
 
 // ----------------------------------------------
 // 3. Symbol Table
@@ -285,10 +292,9 @@ public:
                     continue;
                 }
             }
-            catch(const UnterminatedStringError &)
+            catch(const UnterminatedStringError &e)
             {
-                errors.push_back({"Unterminated triple-quoted string", lineNumber, i});
-                i = source.size();
+                errors.push_back({"Unterminated triple-quoted string", e.line_number, e.index});
                 continue;
             }
 
@@ -379,10 +385,9 @@ public:
                         str,
                         lineNumber));
                 }
-                catch (const UnterminatedStringError &)
+                catch (const UnterminatedStringError &e)
                 {
-                    errors.push_back({"Unterminated string literal", lineNumber, i});
-                    i = source.size();
+                    errors.push_back({"Unterminated string literal", e.line_number, e.index});
                 }
                 continue;
             }
@@ -439,6 +444,7 @@ private:
 
     string handleTripleQuotedString(const string &source, size_t &idx, int &lineNumber)
     {
+        size_t start_line = lineNumber;
         if (idx + 2 < source.size())
         {
             char c = source[idx];
@@ -473,8 +479,8 @@ private:
                     idx++;
                 }
                 // If we get here, the string was never closed
-                idx = start;
-                throw UnterminatedStringError();
+                idx = source.size();
+                throw UnterminatedStringError(start_line, lineNumber);
             }
         }
         return "";
@@ -486,10 +492,10 @@ private:
         return regex_match(string(1, c), operatorRegex);
     }
 
-    string readStringLiteral(const string &source, size_t &idx, int /*lineNumber*/)
+    string readStringLiteral(const string &source, size_t &idx, int &lineNumber)
     {
         if (idx >= source.size())
-            return "";
+            throw UnterminatedStringError(lineNumber, idx);
 
         char quote = source[idx];
         size_t start = idx;
@@ -508,14 +514,22 @@ private:
 
         if (regex_search(remaining, match, re) && match.position() == 0)
         {
+            // Check if there's a newline before next quote
+            size_t newline_pos = source.find('\n', start+1);
+            if (newline_pos != string::npos && (source.find(quote, start+1) > newline_pos)) 
+            {
+                lineNumber++;
+                idx =  newline_pos + 1;
+                throw UnterminatedStringError(lineNumber-1, start);
+            }
             idx = start + match.length();
             return match.str();
         }
         else
         {
             // Handle unterminated string
-            idx = start;
-            throw UnterminatedStringError();
+            idx = source.size();
+            throw UnterminatedStringError(lineNumber, start);
         }
     }
 };
