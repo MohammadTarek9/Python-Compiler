@@ -406,6 +406,11 @@ public:
                     i++;
                 }
                 string num = source.substr(start, i - start);
+                if (num[0] == '0' && !hasDot && num.length() > 1)
+                {
+                    errors.push_back({"leading zeros in decimal integer literals are not permitted", lineNumber, start});
+                    continue;
+                }
                 tokens.push_back(Token(TokenType::NUMBER, num, lineNumber));
                 continue;
             }
