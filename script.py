@@ -24,12 +24,16 @@ def myFunction(x, y=10):
     list2 = [4, 5, 6]
     list3 = myList + list2
     wqt = 5
+    fff = "he"
+    fff2 = "llo"
+    fff3 = fff + fff2
     wrt = 10
     qq = wqt + wrt 
     print(list3)
     mychar = 'a'
     for i in myList:
         print(i)
+    print("hey") if x > 0 else print("hello")
     mySet = {4, 5, 6}
     myDict = {7: "seven", 8: "eight", 9: "nine"}
     myTuple = (0, 1, 2)
@@ -38,7 +42,6 @@ def myFunction(x, y=10):
     newSet = {":", ":(", ":D"} # should be a set not a dictionary
     # do something
     total = x + y
-    haga_bayna_aktar = 0
     if total > 100:
         return True
     elif total < 100:
@@ -65,12 +68,15 @@ def main():
     wrt = 10
     qq = wqt + wrt
     aaa, bbb = 1, 2
+    num = 01
     rrrr,sss="hey","hello"
+    www = rrrr + sss
     tttttt = 4
     rrrrrr = 5
+    unterminated_string = "This is an unterminated string
+    unterminated_string_single = 'This is an unterminated string
     qqqqqq,pppppp = tttttt, rrrrrr
     alpha,beta,gamma = 5,6,7
-    haga_bayna_aktar = 0.5
     qwqwqw, rrr = [1, 2], [3, 4]
     test10,test11= [1,4]
     print(f"Test3: {test3}")

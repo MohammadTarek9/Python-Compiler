@@ -127,30 +127,30 @@ class SymbolTable
 public:
     struct SymbolInfo
     {
+        int entry;            // unique entry number
         string type = "unknown";  // e.g., "function", "class", "int", etc.
-        string scope = "unknown"; // e.g., "global" or "local"
+        string scope = "unknown"; // e.g., "global" or function name
         int firstAppearance = -1; // line of first appearance
         int usageCount = 0;       // how many times it is referenced
 
         // A new field to store a literal value if we know it (optional).
-        // For example, if x = 42, then `value = "42"`. If x = y, no literal is stored.
         string value;
     };
 
     unordered_map<string, SymbolInfo> table;
+    int nextEntry = 1;
 
     void addSymbol(const string &name, const string &type,
                    int lineNumber, const string &scope,
                    const string &val = "")
     {
-    // Create a unique key consisting of  the name and scope
     string uniqueKey = name + "@" + scope;
 
     auto it = table.find(uniqueKey);
     if (it == table.end())
     {
-        // If this symbol hasn't appeared before, create an entry
         SymbolInfo info;
+        info.entry = nextEntry++;
         info.type = type;
         info.scope = scope;
         info.firstAppearance = lineNumber;
@@ -160,14 +160,11 @@ public:
     }
     else
     {
-        // If the symbol already exists in the same scope, update its information
         it->second.usageCount++;
-        // If the type was unknown before, or if we want to override it, do so:
         if (it->second.type == "unknown" && type != "unknown")
         {
             it->second.type = type;
         }
-        // Update the value if we explicitly have a new one
         if (!val.empty())
         {
             it->second.value = val;
@@ -209,16 +206,27 @@ public:
     void printSymbols()
     {
         cout << "Symbol Table:\n";
-        for (auto &[key, info] : table) {
+
+        // Create a vector of pairs to sort by entry
+        vector<pair<string, SymbolInfo>> sortedSymbols(table.begin(), table.end());
+        sort(sortedSymbols.begin(), sortedSymbols.end(),
+             [](const pair<string, SymbolInfo> &a, const pair<string, SymbolInfo> &b) {
+                 return a.second.entry < b.second.entry;
+             });
+
+        for (auto &[key, info] : sortedSymbols)
+        {
             auto at = key.find('@');
             string name = key.substr(0, at);
             string scope = key.substr(at + 1);
-            cout << "Name: " << name
+            cout << "Entry: " << info.entry
+                 << ", Name: " << name
                  << ", Scope: " << scope
                  << ", Type: " << info.type
                  << ", First Appearance: Line " << info.firstAppearance
                  << ", Usage Count: " << info.usageCount;
-            if (!info.value.empty()) cout << ", Value: " << info.value;
+            if (!info.value.empty())
+                cout << ", Value: " << info.value;
             cout << "\n";
         }
     }
@@ -383,10 +391,8 @@ public:
                 continue;
             }
 
-            // Handle operators (simple version)
             if (isOperatorStart(c))
             {
-                //check 3-char operators first
                 if ((i + 2) < source.size())
                 {
                     string threeChars = source.substr(i, 3);
@@ -397,7 +403,6 @@ public:
                         continue;
                     }
                 }
-                // Check 2-char operators
                 if ((i + 1) < source.size())
                 {
                     string twoChars = source.substr(i, 2);
@@ -408,7 +413,6 @@ public:
                         continue;
                     }
                 }
-                // Otherwise single-char operator
                 string oneChar(1, c);
                 if (operators.find(oneChar) != operators.end())
                 {
@@ -687,8 +691,6 @@ public:
                             // If it exists, usage count will increment
                             symbolTable.table[lhsName + "@" + tk.scope].usageCount++;
                         }
-
-                        // Now let's parse the assignment
                         i += 2; // skip past "identifier" and "="
                         auto [rhsType, rhsValue] = parseExpression(i);
 
@@ -745,35 +747,25 @@ private:
     {
         // Parse the first operand
         auto [accumType, accumValue] = parseOperand(i);
-
-        // If we have multiple operators, unify the type.
         while (i < tokens.size())
         {
-            // Check if next token is +, -, *, /
             if (tokens[i].type == TokenType::OPERATOR)
             {
                 string op = tokens[i].lexeme;
                 if (op == "+" || op == "-" || op == "*" || op == "/")
                 {
-                    // consume the operator
                     i++;
-                    // parse next operand
                     auto [nextType, nextValue] = parseOperand(i);
-                    // unify accumType with nextType
                     accumType = unifyTypes(accumType, nextType);
-                    // If we do actual arithmetic, we'd combine accumValue & nextValue,
-                    // but for a multi-operand expression, let's just drop the literal:
                     accumValue = "";
                 }
                 else
                 {
-                    // not a recognized operator for expression => break
                     break;
                 }
             }
             else
             {
-                // next token is not an operator => expression ended
                 break;
             }
         }
@@ -957,11 +949,16 @@ private:
             return "bool";
         }
 
-        // If either is string => let's say "unknown" for arithmetic
-        if (t1 == "string" || t2 == "string")
+        if (t1 == "string" && t2 != "string")
         {
             return "unknown";
         }
+
+        if (t2 == "string" && t1 != "string")
+        {
+            return "unknown";
+        }
+        
 
         // If they're the same, return it
         if (t1 == t2)
@@ -1000,186 +997,197 @@ int main()
 {
     try
     {
-        // 1. Read Python-like source code from an external file
         string sourceCode = readFile("script.py");
 
         vector<Error> errors;
         // 2. Lexical analysis: produce tokens
         Lexer lexer;
         vector<Token> tokens = lexer.tokenize(sourceCode, errors);
-
-        // 3. Print out tokens (for demonstration)
-        cout << "Tokens:\n";
-        for (auto &tk : tokens)
-        {
-            cout << "  Line " << tk.lineNumber << " | ";
-            switch (tk.type)
-            {
-            case TokenType::FalseKeyword:
-                cout << "FalseKeyword";
-                break;
-            case TokenType::NoneKeyword:
-                cout << "NoneKeyword";
-                break;
-            case TokenType::TrueKeyword:
-                cout << "TrueKeyword";
-                break;
-            case TokenType::AndKeyword:
-                cout << "AndKeyword";
-                break;
-            case TokenType::AsKeyword:
-                cout << "AsKeyword";
-                break;
-            case TokenType::AssertKeyword:
-                cout << "AssertKeyword";
-                break;
-            case TokenType::AsyncKeyword:
-                cout << "AsyncKeyword";
-                break;
-            case TokenType::AwaitKeyword:
-                cout << "AwaitKeyword";
-                break;
-            case TokenType::BreakKeyword:
-                cout << "BreakKeyword";
-                break;
-            case TokenType::ClassKeyword:
-                cout << "ClassKeyword";
-                break;
-            case TokenType::ContinueKeyword:
-                cout << "ContinueKeyword";
-                break;
-            case TokenType::DefKeyword:
-                cout << "DefKeyword";
-                break;
-            case TokenType::DelKeyword:
-                cout << "DelKeyword";
-                break;
-            case TokenType::ElifKeyword:
-                cout << "ElifKeyword";
-                break;
-            case TokenType::ElseKeyword:
-                cout << "ElseKeyword";
-                break;
-            case TokenType::ExceptKeyword:
-                cout << "ExceptKeyword";
-                break;
-            case TokenType::FinallyKeyword:
-                cout << "FinallyKeyword";
-                break;
-            case TokenType::ForKeyword:
-                cout << "ForKeyword";
-                break;
-            case TokenType::FromKeyword:
-                cout << "FromKeyword";
-                break;
-            case TokenType::GlobalKeyword:
-                cout << "GlobalKeyword";
-                break;
-            case TokenType::IfKeyword:
-                cout << "IfKeyword";
-                break;
-            case TokenType::ImportKeyword:
-                cout << "ImportKeyword";
-                break;
-            case TokenType::InKeyword:
-                cout << "InKeyword";
-                break;
-            case TokenType::IsKeyword:
-                cout << "IsKeyword";
-                break;
-            case TokenType::LambdaKeyword:
-                cout << "LambdaKeyword";
-                break;
-            case TokenType::NonlocalKeyword:
-                cout << "NonlocalKeyword";
-                break;
-            case TokenType::NotKeyword:
-                cout << "NotKeyword";
-                break;
-            case TokenType::OrKeyword:
-                cout << "OrKeyword";
-                break;
-            case TokenType::PassKeyword:
-                cout << "PassKeyword";
-                break;
-            case TokenType::RaiseKeyword:
-                cout << "RaiseKeyword";
-                break;
-            case TokenType::ReturnKeyword:
-                cout << "ReturnKeyword";
-                break;
-            case TokenType::TryKeyword:
-                cout << "TryKeyword";
-                break;
-            case TokenType::WhileKeyword:
-                cout << "WhileKeyword";
-                break;
-            case TokenType::WithKeyword:
-                cout << "WithKeyword";
-                break;
-            case TokenType::YieldKeyword:
-                cout << "YieldKeyword";
-                break;
-            case TokenType::IDENTIFIER:
-                cout << "IDENTIFIER";
-                break;
-            case TokenType::NUMBER:
-                cout << "NUMBER";
-                break;
-            case TokenType::OPERATOR:
-                cout << "OPERATOR";
-                break;
-            case TokenType::LeftParenthesis:
-                cout << "LeftParenthesis";
-                break;
-            case TokenType::RightParenthesis:
-                cout << "RightParenthesis";
-                break;
-            case TokenType::LeftBracket:
-                cout << "LeftBracket";
-                break;
-            case TokenType::RightBracket:
-                cout << "RightBracket";
-                break;
-            case TokenType::LeftBrace:
-                cout << "LeftBrace";
-                break;
-            case TokenType::RightBrace:
-                cout << "RightBrace";
-                break;
-            case TokenType::Colon:
-                cout << "Colon";
-                break;
-            case TokenType::Comma:
-                cout << "Comma";
-                break;
-            case TokenType::Dot:
-                cout << "Dot";
-                break;
-            case TokenType::Semicolon:
-                cout << "Semicolon";
-                break;
-            case TokenType::STRING_LITERAL:
-                cout << "STRING_LITERAL";
-                break;
-            case TokenType::COMMENT:
-                cout << "COMMENT";
-                break;
-            case TokenType::UNKNOWN:
-                cout << "UNKNOWN";
-                break;
-            }
-            cout << " | Lexeme: " << tk.lexeme << "\n";
-        }
-        cout << endl;
+        SymbolTable symTable;
 
         // 4. Parse/semantic pass: build the symbol table with type inference
-        SymbolTable symTable;
         Parser parser(tokens, symTable);
         parser.parse();
 
         // 5. Print final symbol table
         symTable.printSymbols();
+
+        // 3. Print out tokens (for demonstration)
+        cout << "Tokens:\n";
+        for (auto &tk : tokens)
+        {
+            cout << "< ";
+            switch (tk.type)
+            {
+            case TokenType::FalseKeyword:
+            cout << "FalseKeyword";
+            break;
+            case TokenType::NoneKeyword:
+            cout << "NoneKeyword";
+            break;
+            case TokenType::TrueKeyword:
+            cout << "TrueKeyword";
+            break;
+            case TokenType::AndKeyword:
+            cout << "AndKeyword";
+            break;
+            case TokenType::AsKeyword:
+            cout << "AsKeyword";
+            break;
+            case TokenType::AssertKeyword:
+            cout << "AssertKeyword";
+            break;
+            case TokenType::AsyncKeyword:
+            cout << "AsyncKeyword";
+            break;
+            case TokenType::AwaitKeyword:
+            cout << "AwaitKeyword";
+            break;
+            case TokenType::BreakKeyword:
+            cout << "BreakKeyword";
+            break;
+            case TokenType::ClassKeyword:
+            cout << "ClassKeyword";
+            break;
+            case TokenType::ContinueKeyword:
+            cout << "ContinueKeyword";
+            break;
+            case TokenType::DefKeyword:
+            cout << "DefKeyword";
+            break;
+            case TokenType::DelKeyword:
+            cout << "DelKeyword";
+            break;
+            case TokenType::ElifKeyword:
+            cout << "ElifKeyword";
+            break;
+            case TokenType::ElseKeyword:
+            cout << "ElseKeyword";
+            break;
+            case TokenType::ExceptKeyword:
+            cout << "ExceptKeyword";
+            break;
+            case TokenType::FinallyKeyword:
+            cout << "FinallyKeyword";
+            break;
+            case TokenType::ForKeyword:
+            cout << "ForKeyword";
+            break;
+            case TokenType::FromKeyword:
+            cout << "FromKeyword";
+            break;
+            case TokenType::GlobalKeyword:
+            cout << "GlobalKeyword";
+            break;
+            case TokenType::IfKeyword:
+            cout << "IfKeyword";
+            break;
+            case TokenType::ImportKeyword:
+            cout << "ImportKeyword";
+            break;
+            case TokenType::InKeyword:
+            cout << "InKeyword";
+            break;
+            case TokenType::IsKeyword:
+            cout << "IsKeyword";
+            break;
+            case TokenType::LambdaKeyword:
+            cout << "LambdaKeyword";
+            break;
+            case TokenType::NonlocalKeyword:
+            cout << "NonlocalKeyword";
+            break;
+            case TokenType::NotKeyword:
+            cout << "NotKeyword";
+            break;
+            case TokenType::OrKeyword:
+            cout << "OrKeyword";
+            break;
+            case TokenType::PassKeyword:
+            cout << "PassKeyword";
+            break;
+            case TokenType::RaiseKeyword:
+            cout << "RaiseKeyword";
+            break;
+            case TokenType::ReturnKeyword:
+            cout << "ReturnKeyword";
+            break;
+            case TokenType::TryKeyword:
+            cout << "TryKeyword";
+            break;
+            case TokenType::WhileKeyword:
+            cout << "WhileKeyword";
+            break;
+            case TokenType::WithKeyword:
+            cout << "WithKeyword";
+            break;
+            case TokenType::YieldKeyword:
+            cout << "YieldKeyword";
+            break;
+            case TokenType::IDENTIFIER:
+            cout << "IDENTIFIER";
+            break;
+            case TokenType::NUMBER:
+            cout << "NUMBER";
+            break;
+            case TokenType::OPERATOR:
+            cout << "OPERATOR";
+            break;
+            case TokenType::LeftParenthesis:
+            cout << "LeftParenthesis";
+            break;
+            case TokenType::RightParenthesis:
+            cout << "RightParenthesis";
+            break;
+            case TokenType::LeftBracket:
+            cout << "LeftBracket";
+            break;
+            case TokenType::RightBracket:
+            cout << "RightBracket";
+            break;
+            case TokenType::LeftBrace:
+            cout << "LeftBrace";
+            break;
+            case TokenType::RightBrace:
+            cout << "RightBrace";
+            break;
+            case TokenType::Colon:
+            cout << "Colon";
+            break;
+            case TokenType::Comma:
+            cout << "Comma";
+            break;
+            case TokenType::Dot:
+            cout << "Dot";
+            break;
+            case TokenType::Semicolon:
+            cout << "Semicolon";
+            break;
+            case TokenType::STRING_LITERAL:
+            cout << "STRING_LITERAL";
+            break;
+            case TokenType::UNKNOWN:
+            cout << "UNKNOWN";
+            break;
+            }
+            cout << ", ";
+            if (tk.type == TokenType::IDENTIFIER)
+            {
+            string key = tk.lexeme + "@" + tk.scope;
+            if (symTable.table.find(key) != symTable.table.end()) {
+                cout << "symbol table entry : " <<symTable.table[key].entry;
+            } else {
+                cout << "symbol table entry: not found";
+            }
+            }
+            else
+            {
+            cout << tk.lexeme;
+            }
+            cout << " > ";
+            cout<<" | LINE NUMBER: " << tk.lineNumber << endl;
+        }
+        cout << endl;
 
         // print errors
         printErrors(errors);
