@@ -423,7 +423,7 @@ public:
             {
                 try 
                 {
-                    string str = readStringLiteral(source, i, lineNumber);
+                    string str = handleDoubleQuotedString(source, i, lineNumber);
                     tokens.push_back(Token(
                         TokenType::STRING_LITERAL,
                         str,
@@ -493,7 +493,7 @@ private:
 
     string handleTripleQuotedString(const string &source, size_t &idx, int &lineNumber)
     {
-        size_t start_line = lineNumber;
+        int start_line = lineNumber;
         if (idx + 2 < source.size())
         {
             char c = source[idx];
@@ -529,7 +529,7 @@ private:
                 }
                 // If we get here, the string was never closed
                 idx = source.size();
-                throw UnterminatedStringError(start_line, lineNumber);
+                throw UnterminatedStringError(start_line, start);
             }
         }
         return "";
@@ -541,45 +541,34 @@ private:
         return regex_match(string(1, c), operatorRegex);
     }
 
-    string readStringLiteral(const string &source, size_t &idx, int &lineNumber)
+    string handleDoubleQuotedString(const string &source, size_t &idx, int &lineNumber)
     {
-        if (idx >= source.size())
-            throw UnterminatedStringError(lineNumber, idx);
-
-        char quote = source[idx];
-        size_t start = idx;
-
-        // Construct regex pattern without raw string issues
-        string pattern;
-        pattern += quote;         // Opening quote
-        pattern += "(?:\\\\.|[^"; // Escaped sequences or non-special chars
-        pattern += quote;         // Add quote to excluded chars
-        pattern += "\\\\])*+";    // Close group and add quantifier
-        pattern += quote;         // Closing quote
-
-        regex re(pattern);
-        smatch match;
-        string remaining = source.substr(start);
-
-        if (regex_search(remaining, match, re) && match.position() == 0)
-        {
-            // Check if there's a newline before next quote
-            size_t newline_pos = source.find('\n', start+1);
-            if (newline_pos != string::npos && (source.find(quote, start+1) > newline_pos)) 
+        int start_line = lineNumber;
+        if (idx < source.size()) {
+            char quoteChar = source[idx];
+            size_t start = idx;
+            idx ++; // skip opening quote
+            while (idx < source.size())
             {
-                lineNumber++;
-                idx =  newline_pos + 1;
-                throw UnterminatedStringError(lineNumber-1, start);
+                if (source[idx] == '\\') {
+                    idx++; // Skip the escape character (actual handling depends on your needs)
+                }
+                else if (source[idx] == '\n')
+                {
+                    idx++;
+                    throw UnterminatedStringError(start_line, start);
+                }
+                else if (source[idx] == quoteChar)
+                {
+                    idx ++;
+                    return source.substr(start, idx - start); // Include closing quotes
+                }
+                idx++;
             }
-            idx = start + match.length();
-            return match.str();
+            // If we get here, the string was never closed
+            throw UnterminatedStringError(start_line, start);
         }
-        else
-        {
-            // Handle unterminated string
-            idx = source.size();
-            throw UnterminatedStringError(lineNumber, start);
-        }
+        throw UnterminatedStringError(start_line, idx);
     }
 };
 
