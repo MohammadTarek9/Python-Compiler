@@ -16,56 +16,56 @@ using namespace std;
 enum class TokenType
 {
     FalseKeyword,
-     NoneKeyword,
-     TrueKeyword,
-     AndKeyword,
-     AsKeyword,
-     AssertKeyword,
-     AsyncKeyword,
-     AwaitKeyword,
-     BreakKeyword,
-     ClassKeyword,
-     ContinueKeyword,
-     DefKeyword,
-     DelKeyword,
-     ElifKeyword,
-     ElseKeyword,
-     ExceptKeyword,
-     FinallyKeyword,
-     ForKeyword,
-     FromKeyword,
-     GlobalKeyword,
-     IfKeyword,
-     ImportKeyword,
-     InKeyword,
-     IsKeyword,
-     LambdaKeyword,
-     NonlocalKeyword,
-     NotKeyword,
-     OrKeyword,
-     PassKeyword,
-     RaiseKeyword,
-     ReturnKeyword,
-     TryKeyword,
-     WhileKeyword,
-     WithKeyword,
-     YieldKeyword,
-     IDENTIFIER,
-     NUMBER,
-     OPERATOR,
-     STRING_LITERAL,
-     COMMENT,
-     UNKNOWN,
-     LeftParenthesis,
-     RightParenthesis,
-     LeftBracket,
-     RightBracket,
-     LeftBrace,
-     RightBrace,
-     Colon,
-     Comma,
-     Dot,
-     Semicolon
+    NoneKeyword,
+    TrueKeyword,
+    AndKeyword,
+    AsKeyword,
+    AssertKeyword,
+    AsyncKeyword,
+    AwaitKeyword,
+    BreakKeyword,
+    ClassKeyword,
+    ContinueKeyword,
+    DefKeyword,
+    DelKeyword,
+    ElifKeyword,
+    ElseKeyword,
+    ExceptKeyword,
+    FinallyKeyword,
+    ForKeyword,
+    FromKeyword,
+    GlobalKeyword,
+    IfKeyword,
+    ImportKeyword,
+    InKeyword,
+    IsKeyword,
+    LambdaKeyword,
+    NonlocalKeyword,
+    NotKeyword,
+    OrKeyword,
+    PassKeyword,
+    RaiseKeyword,
+    ReturnKeyword,
+    TryKeyword,
+    WhileKeyword,
+    WithKeyword,
+    YieldKeyword,
+    IDENTIFIER,
+    NUMBER,
+    OPERATOR,
+    STRING_LITERAL,
+    COMMENT,
+    UNKNOWN,
+    LeftParenthesis,
+    RightParenthesis,
+    LeftBracket,
+    RightBracket,
+    LeftBrace,
+    RightBrace,
+    Colon,
+    Comma,
+    Dot,
+    Semicolon
 };
 
 // ----------------------------------------------
@@ -85,37 +85,43 @@ struct Token
 // ----------------------------------------------
 // 2. Error Structure
 // ----------------------------------------------
-struct Error {
+struct Error
+{
     string message;
     int line;
     size_t position;
 
-    void print() const {
-        cerr << "Error at line " << line << ", position " << position 
+    void print() const
+    {
+        cerr << "Error at line " << line << ", position " << position
              << ": " << message << endl;
     }
 };
 
-// printing errors  
-void printErrors(const vector<Error>& errors) {
-    if (errors.empty()) {
+// printing errors
+void printErrors(const vector<Error> &errors)
+{
+    if (errors.empty())
+    {
         cout << "\nNo errors found during tokenization." << endl;
         return;
     }
 
     cerr << "\nTokenization errors (" << errors.size() << "):" << endl;
-    for (const auto& error : errors) {
+    for (const auto &error : errors)
+    {
         error.print();
     }
 }
 
 // Exception for string handling
-class UnterminatedStringError : public std::exception {
-    public:
-        int line_number;
-        size_t index;
-        // Constructor that takes line number and index
-        UnterminatedStringError(int line, int idx) 
+class UnterminatedStringError : public std::exception
+{
+public:
+    int line_number;
+    size_t index;
+    // Constructor that takes line number and index
+    UnterminatedStringError(int line, int idx)
         : line_number(line), index(idx) {}
 };
 
@@ -127,7 +133,7 @@ class SymbolTable
 public:
     struct SymbolInfo
     {
-        int entry;            // unique entry number
+        int entry;                // unique entry number
         string type = "unknown";  // e.g., "function", "class", "int", etc.
         string scope = "unknown"; // e.g., "global" or function name
         int firstAppearance = -1; // line of first appearance
@@ -144,61 +150,68 @@ public:
                    int lineNumber, const string &scope,
                    const string &val = "")
     {
-    string uniqueKey = name + "@" + scope;
+        string uniqueKey = name + "@" + scope;
 
-    auto it = table.find(uniqueKey);
-    if (it == table.end())
-    {
-        SymbolInfo info;
-        info.entry = nextEntry++;
-        info.type = type;
-        info.scope = scope;
-        info.firstAppearance = lineNumber;
-        info.usageCount = 1;
-        info.value = val;
-        table[uniqueKey] = info;
-    }
-    else
-    {
-        it->second.usageCount++;
-        if (it->second.type == "unknown" && type != "unknown")
+        auto it = table.find(uniqueKey);
+        if (it == table.end())
         {
-            it->second.type = type;
+            SymbolInfo info;
+            info.entry = nextEntry++;
+            info.type = type;
+            info.scope = scope;
+            info.firstAppearance = lineNumber;
+            info.usageCount = 1;
+            info.value = val;
+            table[uniqueKey] = info;
         }
-        if (!val.empty())
+        else
         {
-            it->second.value = val;
+            it->second.usageCount++;
+            if (it->second.type == "unknown" && type != "unknown")
+            {
+                it->second.type = type;
+            }
+            if (!val.empty())
+            {
+                it->second.value = val;
+            }
         }
-    }
     }
 
     // Allows updating a symbol's type after creation.
-    void updateType(const string &name, const string &scope, const string &newType) {
+    void updateType(const string &name, const string &scope, const string &newType)
+    {
         string key = name + "@" + scope;
-        if (table.find(key) != table.end()) {
+        if (table.find(key) != table.end())
+        {
             table[key].type = newType;
         }
     }
 
     // Allows updating a symbol's literal value after creation.
-    void updateValue(const string &name, const string &scope, const string &newValue) {
+    void updateValue(const string &name, const string &scope, const string &newValue)
+    {
         string key = name + "@" + scope;
-        if (table.find(key) != table.end()) {
+        if (table.find(key) != table.end())
+        {
             table[key].value = newValue;
         }
     }
 
     // Retrieve the type of a symbol if it exists
-    bool exist(const string &name, const string &scope) {
+    bool exist(const string &name, const string &scope)
+    {
         return table.find(name + "@" + scope) != table.end();
     }
 
-    string getType(const string &name, const string &scope) {
+    string getType(const string &name, const string &scope)
+    {
         auto it = table.find(name + "@" + scope);
         return it != table.end() ? it->second.type : "unknown";
     }
 
-    string getValue(const string &name, const string &scope) {
+    string getValue(const string &name, const string &scope)
+    {
         auto it = table.find(name + "@" + scope);
         return it != table.end() ? it->second.value : "";
     }
@@ -210,7 +223,8 @@ public:
         // Create a vector of pairs to sort by entry
         vector<pair<string, SymbolInfo>> sortedSymbols(table.begin(), table.end());
         sort(sortedSymbols.begin(), sortedSymbols.end(),
-             [](const pair<string, SymbolInfo> &a, const pair<string, SymbolInfo> &b) {
+             [](const pair<string, SymbolInfo> &a, const pair<string, SymbolInfo> &b)
+             {
                  return a.second.entry < b.second.entry;
              });
 
@@ -273,13 +287,12 @@ public:
         {"try", TokenType::TryKeyword},
         {"while", TokenType::WhileKeyword},
         {"with", TokenType::WithKeyword},
-        {"yield", TokenType::YieldKeyword}
-    };
+        {"yield", TokenType::YieldKeyword}};
 
     // Some common single/multi/triple-character operators
     unordered_set<string> operators = {
-        "+", "-", "*", "/", "%", "//", "**", "=", "==", "!=", "<", "<=", ">", 
-        ">=", "+=", "-=", "*=", "/=", "%=", "//=", "**=","|", "&", "^", "~", "<<", ">>"};
+        "+", "-", "*", "/", "%", "//", "**", "=", "==", "!=", "<", "<=", ">",
+        ">=", "+=", "-=", "*=", "/=", "%=", "//=", "**=", "|", "&", "^", "~", "<<", ">>"};
 
     // Common delimiters
     unordered_map<char, TokenType> punctuationSymbols = {
@@ -292,8 +305,7 @@ public:
         {']', TokenType::RightBracket},
         {'{', TokenType::LeftBrace},
         {'}', TokenType::RightBrace},
-        {';', TokenType::Semicolon}
-    };
+        {';', TokenType::Semicolon}};
 
     string currentScope = "global";
 
@@ -344,7 +356,7 @@ public:
                     continue;
                 }
             }
-            catch(const UnterminatedStringError &e)
+            catch (const UnterminatedStringError &e)
             {
                 errors.push_back({"Unterminated triple-quoted string", e.line_number, e.index});
                 continue;
@@ -363,30 +375,32 @@ public:
                 if (pythonKeywords.find(word) != pythonKeywords.end())
                 {
                     // change the scope if it is a function or class
-                    if(word == "def" || word == "class"){
+                    if (word == "def" || word == "class")
+                    {
                         tokens.push_back(Token(pythonKeywords[word], word, lineNumber));
                         skipWhitespace(source, i);
                         size_t identifierStart = i;
                         while (i < source.size() && (isalnum(static_cast<unsigned char>(source[i])) || source[i] == '_'))
+                        {
+                            i++;
+                        }
+                        if (identifierStart < i)
+                        {
+                            string identifier = source.substr(identifierStart, i - identifierStart);
+                            currentScope = identifier;
+                            // cout<<"Current scope: " << currentScope << endl;
+                            tokens.push_back(Token(TokenType::IDENTIFIER, identifier, lineNumber, currentScope));
+                        }
+                    }
+                    else
                     {
-                        i++;
-                    }
-                    if (identifierStart < i)
-                    {
-                        string identifier = source.substr(identifierStart, i - identifierStart);
-                        currentScope = identifier;
-                        //cout<<"Current scope: " << currentScope << endl;
-                        tokens.push_back(Token(TokenType::IDENTIFIER, identifier, lineNumber, currentScope));
-                    }
-                    }
-                    else{
                         tokens.push_back(Token(pythonKeywords[word], word, lineNumber));
                     }
                 }
                 else
                 {
                     tokens.push_back(Token(TokenType::IDENTIFIER, word, lineNumber, currentScope));
-                    //cout<< "scope of " << word << " is " << currentScope << endl;
+                    // cout<< "scope of " << word << " is " << currentScope << endl;
                 }
                 continue;
             }
@@ -425,7 +439,7 @@ public:
             // Handle string literals with error checking
             if (c == '"' || c == '\'')
             {
-                try 
+                try
                 {
                     string str = handleDoubleQuotedString(source, i, lineNumber);
                     tokens.push_back(Token(
@@ -454,7 +468,7 @@ public:
                     i++;
                 }
                 string num = source.substr(start, i - start);
-                if (num[0] == '0' && std::stoi(num) != 0 && !hasDot )
+                if (num[0] == '0' && std::stoi(num) != 0 && !hasDot)
                 {
                     errors.push_back({"leading zeros in decimal integer literals are not permitted", lineNumber, start});
                     continue;
@@ -510,7 +524,8 @@ private:
                 idx += 3; // skip opening triple quotes
                 while (idx + 2 < source.size())
                 {
-                    if (source[idx] == '\\') {
+                    if (source[idx] == '\\')
+                    {
                         idx++; // Skip the escape character (actual handling depends on your needs)
                     }
                     else if (source[idx] == '\n')
@@ -518,7 +533,8 @@ private:
                         lineNumber++;
                         idx++;
                     }
-                    else if (source[idx] == '\r' && idx+1 < source.size() && source[idx+1] == '\n') {
+                    else if (source[idx] == '\r' && idx + 1 < source.size() && source[idx + 1] == '\n')
+                    {
                         lineNumber++;
                         idx++; // Skip \r\n
                     }
@@ -526,7 +542,7 @@ private:
                         source[idx + 1] == quoteChar &&
                         source[idx + 2] == quoteChar)
                     {
-                        idx += 3; // skip closing triple quotes
+                        idx += 3;                                 // skip closing triple quotes
                         return source.substr(start, idx - start); // Include closing quotes
                     }
                     idx++;
@@ -548,13 +564,15 @@ private:
     string handleDoubleQuotedString(const string &source, size_t &idx, int &lineNumber)
     {
         int start_line = lineNumber;
-        if (idx < source.size()) {
+        if (idx < source.size())
+        {
             char quoteChar = source[idx];
             size_t start = idx;
-            idx ++; // skip opening quote
+            idx++; // skip opening quote
             while (idx < source.size())
             {
-                if (source[idx] == '\\') {
+                if (source[idx] == '\\')
+                {
                     idx++; // Skip the escape character (actual handling depends on your needs)
                 }
                 else if (source[idx] == '\n')
@@ -564,7 +582,7 @@ private:
                 }
                 else if (source[idx] == quoteChar)
                 {
-                    idx ++;
+                    idx++;
                     return source.substr(start, idx - start); // Include closing quotes
                 }
                 idx++;
@@ -625,46 +643,65 @@ public:
                     // handle multiple assignment like x,y = 2,3 -> assigns x = 2 and y = 3
                     size_t temp = i;
                     vector<Token> lhsIdentifiers;
-                    while (temp < tokens.size()) {
-                        if (tokens[temp].type == TokenType::IDENTIFIER) {
+                    while (temp < tokens.size())
+                    {
+                        if (tokens[temp].type == TokenType::IDENTIFIER)
+                        {
                             lhsIdentifiers.push_back(tokens[temp]);
                             temp++;
-                            if (temp < tokens.size() && tokens[temp].type == TokenType::Comma) {
+                            if (temp < tokens.size() && tokens[temp].type == TokenType::Comma)
+                            {
                                 temp++;
-                            } else {
+                            }
+                            else
+                            {
                                 break;
                             }
-                        } else {
+                        }
+                        else
+                        {
                             break;
                         }
                     }
 
-                    if (temp < tokens.size() && tokens[temp].type == TokenType::OPERATOR && tokens[temp].lexeme == "=") {
+                    if (temp < tokens.size() && tokens[temp].type == TokenType::OPERATOR && tokens[temp].lexeme == "=")
+                    {
                         temp++;
                         vector<pair<string, string>> rhsValues;
-                        while (temp < tokens.size()) {
+                        while (temp < tokens.size())
+                        {
                             auto [type, value] = parseExpression(temp);
                             rhsValues.push_back({type, value});
-                            if (temp < tokens.size() && tokens[temp].type == TokenType::Comma) {
+                            if (temp < tokens.size() && tokens[temp].type == TokenType::Comma)
+                            {
                                 temp++;
-                            } else {
+                            }
+                            else
+                            {
                                 break;
                             }
                         }
 
-                        for (size_t j = 0; j < lhsIdentifiers.size(); ++j) {
+                        for (size_t j = 0; j < lhsIdentifiers.size(); ++j)
+                        {
                             const Token &var = lhsIdentifiers[j];
                             string key = var.lexeme + "@" + var.scope;
-                            if (!symbolTable.exist(var.lexeme, var.scope)) {
+                            if (!symbolTable.exist(var.lexeme, var.scope))
+                            {
                                 symbolTable.addSymbol(var.lexeme, "unknown", var.lineNumber, var.scope);
-                            } else {
+                            }
+                            else
+                            {
                                 symbolTable.table[key].usageCount++;
                             }
-                            if (j < rhsValues.size()) {
-                                if (rhsValues[j].first != "unknown") {
+                            if (j < rhsValues.size())
+                            {
+                                if (rhsValues[j].first != "unknown")
+                                {
                                     symbolTable.updateType(var.lexeme, var.scope, rhsValues[j].first);
                                 }
-                                if (!rhsValues[j].second.empty()) {
+                                if (!rhsValues[j].second.empty())
+                                {
                                     symbolTable.updateValue(var.lexeme, var.scope, rhsValues[j].second);
                                 }
                             }
@@ -697,7 +734,7 @@ public:
                         // Update the LHS symbol with the inferred type/value
                         if (rhsType != "unknown")
                         {
-                            symbolTable.updateType(lhsName,tk.scope, rhsType);
+                            symbolTable.updateType(lhsName, tk.scope, rhsType);
                         }
                         if (!rhsValue.empty())
                         {
@@ -958,7 +995,6 @@ private:
         {
             return "unknown";
         }
-        
 
         // If they're the same, return it
         if (t1 == t2)
@@ -1020,172 +1056,175 @@ int main()
             switch (tk.type)
             {
             case TokenType::FalseKeyword:
-            cout << "FalseKeyword";
-            break;
+                cout << "FalseKeyword";
+                break;
             case TokenType::NoneKeyword:
-            cout << "NoneKeyword";
-            break;
+                cout << "NoneKeyword";
+                break;
             case TokenType::TrueKeyword:
-            cout << "TrueKeyword";
-            break;
+                cout << "TrueKeyword";
+                break;
             case TokenType::AndKeyword:
-            cout << "AndKeyword";
-            break;
+                cout << "AndKeyword";
+                break;
             case TokenType::AsKeyword:
-            cout << "AsKeyword";
-            break;
+                cout << "AsKeyword";
+                break;
             case TokenType::AssertKeyword:
-            cout << "AssertKeyword";
-            break;
+                cout << "AssertKeyword";
+                break;
             case TokenType::AsyncKeyword:
-            cout << "AsyncKeyword";
-            break;
+                cout << "AsyncKeyword";
+                break;
             case TokenType::AwaitKeyword:
-            cout << "AwaitKeyword";
-            break;
+                cout << "AwaitKeyword";
+                break;
             case TokenType::BreakKeyword:
-            cout << "BreakKeyword";
-            break;
+                cout << "BreakKeyword";
+                break;
             case TokenType::ClassKeyword:
-            cout << "ClassKeyword";
-            break;
+                cout << "ClassKeyword";
+                break;
             case TokenType::ContinueKeyword:
-            cout << "ContinueKeyword";
-            break;
+                cout << "ContinueKeyword";
+                break;
             case TokenType::DefKeyword:
-            cout << "DefKeyword";
-            break;
+                cout << "DefKeyword";
+                break;
             case TokenType::DelKeyword:
-            cout << "DelKeyword";
-            break;
+                cout << "DelKeyword";
+                break;
             case TokenType::ElifKeyword:
-            cout << "ElifKeyword";
-            break;
+                cout << "ElifKeyword";
+                break;
             case TokenType::ElseKeyword:
-            cout << "ElseKeyword";
-            break;
+                cout << "ElseKeyword";
+                break;
             case TokenType::ExceptKeyword:
-            cout << "ExceptKeyword";
-            break;
+                cout << "ExceptKeyword";
+                break;
             case TokenType::FinallyKeyword:
-            cout << "FinallyKeyword";
-            break;
+                cout << "FinallyKeyword";
+                break;
             case TokenType::ForKeyword:
-            cout << "ForKeyword";
-            break;
+                cout << "ForKeyword";
+                break;
             case TokenType::FromKeyword:
-            cout << "FromKeyword";
-            break;
+                cout << "FromKeyword";
+                break;
             case TokenType::GlobalKeyword:
-            cout << "GlobalKeyword";
-            break;
+                cout << "GlobalKeyword";
+                break;
             case TokenType::IfKeyword:
-            cout << "IfKeyword";
-            break;
+                cout << "IfKeyword";
+                break;
             case TokenType::ImportKeyword:
-            cout << "ImportKeyword";
-            break;
+                cout << "ImportKeyword";
+                break;
             case TokenType::InKeyword:
-            cout << "InKeyword";
-            break;
+                cout << "InKeyword";
+                break;
             case TokenType::IsKeyword:
-            cout << "IsKeyword";
-            break;
+                cout << "IsKeyword";
+                break;
             case TokenType::LambdaKeyword:
-            cout << "LambdaKeyword";
-            break;
+                cout << "LambdaKeyword";
+                break;
             case TokenType::NonlocalKeyword:
-            cout << "NonlocalKeyword";
-            break;
+                cout << "NonlocalKeyword";
+                break;
             case TokenType::NotKeyword:
-            cout << "NotKeyword";
-            break;
+                cout << "NotKeyword";
+                break;
             case TokenType::OrKeyword:
-            cout << "OrKeyword";
-            break;
+                cout << "OrKeyword";
+                break;
             case TokenType::PassKeyword:
-            cout << "PassKeyword";
-            break;
+                cout << "PassKeyword";
+                break;
             case TokenType::RaiseKeyword:
-            cout << "RaiseKeyword";
-            break;
+                cout << "RaiseKeyword";
+                break;
             case TokenType::ReturnKeyword:
-            cout << "ReturnKeyword";
-            break;
+                cout << "ReturnKeyword";
+                break;
             case TokenType::TryKeyword:
-            cout << "TryKeyword";
-            break;
+                cout << "TryKeyword";
+                break;
             case TokenType::WhileKeyword:
-            cout << "WhileKeyword";
-            break;
+                cout << "WhileKeyword";
+                break;
             case TokenType::WithKeyword:
-            cout << "WithKeyword";
-            break;
+                cout << "WithKeyword";
+                break;
             case TokenType::YieldKeyword:
-            cout << "YieldKeyword";
-            break;
+                cout << "YieldKeyword";
+                break;
             case TokenType::IDENTIFIER:
-            cout << "IDENTIFIER";
-            break;
+                cout << "IDENTIFIER";
+                break;
             case TokenType::NUMBER:
-            cout << "NUMBER";
-            break;
+                cout << "NUMBER";
+                break;
             case TokenType::OPERATOR:
-            cout << "OPERATOR";
-            break;
+                cout << "OPERATOR";
+                break;
             case TokenType::LeftParenthesis:
-            cout << "LeftParenthesis";
-            break;
+                cout << "LeftParenthesis";
+                break;
             case TokenType::RightParenthesis:
-            cout << "RightParenthesis";
-            break;
+                cout << "RightParenthesis";
+                break;
             case TokenType::LeftBracket:
-            cout << "LeftBracket";
-            break;
+                cout << "LeftBracket";
+                break;
             case TokenType::RightBracket:
-            cout << "RightBracket";
-            break;
+                cout << "RightBracket";
+                break;
             case TokenType::LeftBrace:
-            cout << "LeftBrace";
-            break;
+                cout << "LeftBrace";
+                break;
             case TokenType::RightBrace:
-            cout << "RightBrace";
-            break;
+                cout << "RightBrace";
+                break;
             case TokenType::Colon:
-            cout << "Colon";
-            break;
+                cout << "Colon";
+                break;
             case TokenType::Comma:
-            cout << "Comma";
-            break;
+                cout << "Comma";
+                break;
             case TokenType::Dot:
-            cout << "Dot";
-            break;
+                cout << "Dot";
+                break;
             case TokenType::Semicolon:
-            cout << "Semicolon";
-            break;
+                cout << "Semicolon";
+                break;
             case TokenType::STRING_LITERAL:
-            cout << "STRING_LITERAL";
-            break;
+                cout << "STRING_LITERAL";
+                break;
             case TokenType::UNKNOWN:
-            cout << "UNKNOWN";
-            break;
+                cout << "UNKNOWN";
+                break;
             }
             cout << ", ";
             if (tk.type == TokenType::IDENTIFIER)
             {
-            string key = tk.lexeme + "@" + tk.scope;
-            if (symTable.table.find(key) != symTable.table.end()) {
-                cout << "symbol table entry : " <<symTable.table[key].entry;
-            } else {
-                cout << "symbol table entry: not found";
-            }
+                string key = tk.lexeme + "@" + tk.scope;
+                if (symTable.table.find(key) != symTable.table.end())
+                {
+                    cout << "symbol table entry : " << symTable.table[key].entry;
+                }
+                else
+                {
+                    cout << "symbol table entry: not found";
+                }
             }
             else
             {
-            cout << tk.lexeme;
+                cout << tk.lexeme;
             }
             cout << " > ";
-            cout<<" | LINE NUMBER: " << tk.lineNumber << endl;
+            cout << " | LINE NUMBER: " << tk.lineNumber << endl;
         }
         cout << endl;
 
