@@ -37,7 +37,9 @@ def myFunction(x, y=10):
     mySet = {4, 5, 6}
     myDict = {7: "seven", 8: "eight", 9: "nine"}
     myTuple = (0, 1, 2)
-    myTuple2 = (12+14)/2 # not handled as a tuple
+    myTuple2 = (12+14) # not handled as a tuple
+    myTuple3 = (12) # handled as a tuple
+    wrong_tuple = (12, 14
     names = ["hey", "hello", "hi"]
     newSet = {":", ":(", ":D"} # should be a set not a dictionary
     # do something
@@ -48,6 +50,7 @@ def myFunction(x, y=10):
         return False
     else:
         return "Result is {}".format(total)
+wqt = 10
 
 def main():
     """Main function docstring"""

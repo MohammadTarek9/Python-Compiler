@@ -999,18 +999,47 @@ private:
         {
             string value = "(";
             i++;
+            vector<string> elementTypes;
+            vector<string> elementValues;
+
             while (i < tokens.size() && tokens[i].lexeme != ")")
             {
-                // auto [type, value] = parseOperand(i); // if we want to know the type of the values stored too
-                value = value + tokens[i].lexeme;
-                i++;
+            auto [innerType, innerValue] = parseExpression(i);
+            elementTypes.push_back(innerType);
+            elementValues.push_back(innerValue);
+
+            if (i < tokens.size() && tokens[i].lexeme == ",")
+            {
+                value += innerValue + ",";
+                i++; // Skip the comma
             }
+            else
+            {
+                value += innerValue;
+                break;
+            }
+            }
+
             if (i < tokens.size() && tokens[i].lexeme == ")")
             {
-                i++;
+            i++;
+            value += ")";
+            if (elementTypes.size() == 1)
+            {
+                // Single element in parentheses, treat as the element itself
+                return { elementTypes[0], value };
             }
-            value = value + ")";
-            return { "tuple", value };
+            else
+            {
+                // Multiple elements, treat as a tuple
+                return { "tuple", value };
+            }
+            }
+            else
+            {
+            // If no closing parenthesis, return unknown
+            return { "unknown", value };
+            }
         }
 
         // if it's a list
