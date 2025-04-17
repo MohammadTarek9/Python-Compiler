@@ -80,12 +80,12 @@ struct Token
     int lineNumber;
     string scope;
 
-    Token(TokenType t, const string &l, int line, const string &s = "")
+    Token(TokenType t, const string& l, int line, const string& s = "")
         : type(t), lexeme(l), lineNumber(line), scope(s) {}
 };
 
 // ----------------------------------------------
-// 2. Error Structure
+// 3. Error Structure
 // ----------------------------------------------
 struct Error
 {
@@ -96,12 +96,12 @@ struct Error
     void print() const
     {
         cerr << "Error at line " << line << ", position " << position
-             << ": " << message << endl;
+            << ": " << message << endl;
     }
 };
 
 // printing errors
-void printErrors(const vector<Error> &errors)
+void printErrors(const vector<Error>& errors)
 {
     if (errors.empty())
     {
@@ -110,7 +110,7 @@ void printErrors(const vector<Error> &errors)
     }
 
     cerr << "\nTokenization errors (" << errors.size() << "):" << endl;
-    for (const auto &error : errors)
+    for (const auto& error : errors)
     {
         error.print();
     }
@@ -128,7 +128,15 @@ public:
 };
 
 // ----------------------------------------------
-// 3. Symbol Table
+// 4. Scope Info Structure
+// ----------------------------------------------
+struct ScopeInfo {
+    std::string name;
+    int indentLevel;  // Indentation level when the scope started
+};
+
+// ----------------------------------------------
+// 5. Symbol Table
 // ----------------------------------------------
 class SymbolTable
 {
@@ -148,9 +156,9 @@ public:
     unordered_map<string, SymbolInfo> table;
     int nextEntry = 1;
 
-    void addSymbol(const string &name, const string &type,
-                   int lineNumber, const string &scope,
-                   const string &val = "")
+    void addSymbol(const string& name, const string& type,
+        int lineNumber, const string& scope,
+        const string& val = "")
     {
         string uniqueKey = name + "@" + scope;
 
@@ -181,7 +189,7 @@ public:
     }
 
     // Allows updating a symbol's type after creation.
-    void updateType(const string &name, const string &scope, const string &newType)
+    void updateType(const string& name, const string& scope, const string& newType)
     {
         string key = name + "@" + scope;
         if (table.find(key) != table.end())
@@ -191,7 +199,7 @@ public:
     }
 
     // Allows updating a symbol's literal value after creation.
-    void updateValue(const string &name, const string &scope, const string &newValue)
+    void updateValue(const string& name, const string& scope, const string& newValue)
     {
         string key = name + "@" + scope;
         if (table.find(key) != table.end())
@@ -201,18 +209,18 @@ public:
     }
 
     // Retrieve the type of a symbol if it exists
-    bool exist(const string &name, const string &scope)
+    bool exist(const string& name, const string& scope)
     {
         return table.find(name + "@" + scope) != table.end();
     }
 
-    string getType(const string &name, const string &scope)
+    string getType(const string& name, const string& scope)
     {
         auto it = table.find(name + "@" + scope);
         return it != table.end() ? it->second.type : "unknown";
     }
 
-    string getValue(const string &name, const string &scope)
+    string getValue(const string& name, const string& scope)
     {
         auto it = table.find(name + "@" + scope);
         return it != table.end() ? it->second.value : "";
@@ -225,22 +233,22 @@ public:
         // Create a vector of pairs to sort by entry
         vector<pair<string, SymbolInfo>> sortedSymbols(table.begin(), table.end());
         sort(sortedSymbols.begin(), sortedSymbols.end(),
-             [](const pair<string, SymbolInfo> &a, const pair<string, SymbolInfo> &b)
-             {
-                 return a.second.entry < b.second.entry;
-             });
+            [](const pair<string, SymbolInfo>& a, const pair<string, SymbolInfo>& b)
+            {
+                return a.second.entry < b.second.entry;
+            });
 
-        for (auto &[key, info] : sortedSymbols)
+        for (auto& [key, info] : sortedSymbols)
         {
             auto at = key.find('@');
             string name = key.substr(0, at);
             string scope = key.substr(at + 1);
             cout << "Entry: " << info.entry
-                 << ", Name: " << name
-                 << ", Scope: " << scope
-                 << ", Type: " << info.type
-                 << ", First Appearance: Line " << info.firstAppearance
-                 << ", Usage Count: " << info.usageCount;
+                << ", Name: " << name
+                << ", Scope: " << scope
+                << ", Type: " << info.type
+                << ", First Appearance: Line " << info.firstAppearance
+                << ", Usage Count: " << info.usageCount;
             if (!info.value.empty())
                 cout << ", Value: " << info.value;
             cout << "\n";
@@ -249,7 +257,7 @@ public:
 };
 
 // ----------------------------------------------
-// 4. Lexer (purely lexical analysis)
+// 6. Lexer (purely lexical analysis)
 // ----------------------------------------------
 class Lexer
 {
@@ -289,12 +297,12 @@ public:
         {"try", TokenType::TryKeyword},
         {"while", TokenType::WhileKeyword},
         {"with", TokenType::WithKeyword},
-        {"yield", TokenType::YieldKeyword}};
+        {"yield", TokenType::YieldKeyword} };
 
     // Some common single/multi/triple-character operators
     unordered_set<string> operators = {
         "+", "-", "*", "/", "%", "//", "**", "=", "==", "!=", "<", "<=", ">",
-        ">=", "+=", "-=", "*=", "/=", "%=", "//=", "**=", "|", "&", "^", "~", "<<", ">>"};
+        ">=", "+=", "-=", "*=", "/=", "%=", "//=", "**=", "|", "&", "^", "~", "<<", ">>" };
 
     // Common delimiters
     unordered_map<char, TokenType> punctuationSymbols = {
@@ -307,17 +315,17 @@ public:
         {']', TokenType::RightBracket},
         {'{', TokenType::LeftBrace},
         {'}', TokenType::RightBrace},
-        {';', TokenType::Semicolon}};
+        {';', TokenType::Semicolon} };
 
-    string currentScope = "global";
+    vector<ScopeInfo> scopeStack;
 
     // The tokenize() function produces tokens without modifying the symbol table.
-    vector<Token> tokenize(const string &source, vector<Error> &errors)
+    vector<Token> tokenize(const string& source, vector<Error>& errors)
     {
         vector<Token> tokens;
         int lineNumber = 1;
         size_t i = 0;
-        indentStack = {0}; // Reset state
+        indentStack = { 0 }; // Reset state
         atLineStart = true;
         lineContinuation = false;
 
@@ -381,9 +389,9 @@ public:
                     continue;
                 }
             }
-            catch (const UnterminatedStringError &e)
+            catch (const UnterminatedStringError& e)
             {
-                errors.push_back({"Unterminated triple-quoted string", e.line_number, e.index});
+                errors.push_back({ "Unterminated triple-quoted string", e.line_number, e.index });
                 continue;
             }
 
@@ -392,7 +400,7 @@ public:
             {
                 size_t start = i;
                 while (i < source.size() &&
-                       (isalnum(static_cast<unsigned char>(source[i])) || source[i] == '_'))
+                    (isalnum(static_cast<unsigned char>(source[i])) || source[i] == '_'))
                 {
                     i++;
                 }
@@ -412,9 +420,9 @@ public:
                         if (identifierStart < i)
                         {
                             string identifier = source.substr(identifierStart, i - identifierStart);
-                            currentScope = identifier;
-                            // cout<<"Current scope: " << currentScope << endl;
-                            tokens.push_back(Token(TokenType::IDENTIFIER, identifier, lineNumber, currentScope));
+                            scopeStack.push_back({ identifier, indentStack.back() });
+                            // cout<<"Current scope: " << scopeStack << endl;
+                            tokens.push_back(Token(TokenType::IDENTIFIER, identifier, lineNumber, getScope(scopeStack)));
                         }
                     }
                     else
@@ -424,8 +432,8 @@ public:
                 }
                 else
                 {
-                    tokens.push_back(Token(TokenType::IDENTIFIER, word, lineNumber, currentScope));
-                    // cout<< "scope of " << word << " is " << currentScope << endl;
+                    tokens.push_back(Token(TokenType::IDENTIFIER, word, lineNumber, getScope(scopeStack)));
+                    // cout<< "scope of " << word << " is " << scopeStack << endl;
                 }
                 continue;
             }
@@ -472,9 +480,9 @@ public:
                         str,
                         lineNumber));
                 }
-                catch (const UnterminatedStringError &e)
+                catch (const UnterminatedStringError& e)
                 {
-                    errors.push_back({"Unterminated string literal", e.line_number, e.index});
+                    errors.push_back({ "Unterminated string literal", e.line_number, e.index });
                 }
                 continue;
             }
@@ -495,7 +503,7 @@ public:
                 string num = source.substr(start, i - start);
                 if (num[0] == '0' && std::stoi(num) != 0 && !hasDot)
                 {
-                    errors.push_back({"leading zeros in decimal integer literals are not permitted", lineNumber, start});
+                    errors.push_back({ "leading zeros in decimal integer literals are not permitted", lineNumber, start });
                     continue;
                 }
                 tokens.push_back(Token(TokenType::NUMBER, num, lineNumber));
@@ -511,7 +519,7 @@ public:
             }
 
             // Unknown character - add error but keep going
-            errors.push_back({"Invalid character '" + string(1, c) + "'", lineNumber, i});
+            errors.push_back({ "Invalid character '" + string(1, c) + "'", lineNumber, i });
             i++;
             atLineStart = false;
         }
@@ -527,11 +535,11 @@ public:
     }
 
 private:
-    vector<int> indentStack = {0}; // Track indentation levels (e.g., [0, 4, 8])
+    vector<int> indentStack = { 0 }; // Track indentation levels (e.g., [0, 4, 8])
     bool atLineStart = true;       // Flag for newline handling
     bool lineContinuation = false; // Track line continuation via '\'
 
-    void skipNonLeadingWhitespace(const string &source, size_t &idx)
+    void skipNonLeadingWhitespace(const string& source, size_t& idx)
     {
         static const regex ws_regex(R"(^[ \t\r]+)");
         smatch match;
@@ -546,7 +554,7 @@ private:
         }
     }
 
-    string handleTripleQuotedString(const string &source, size_t &idx, int &lineNumber)
+    string handleTripleQuotedString(const string& source, size_t& idx, int& lineNumber)
     {
         int start_line = lineNumber;
         if (idx + 2 < source.size())
@@ -598,7 +606,7 @@ private:
         return regex_match(string(1, c), operatorRegex);
     }
 
-    string handleDoubleQuotedString(const string &source, size_t &idx, int &lineNumber)
+    string handleDoubleQuotedString(const string& source, size_t& idx, int& lineNumber)
     {
         int start_line = lineNumber;
         if (idx < source.size())
@@ -630,8 +638,8 @@ private:
         throw UnterminatedStringError(start_line, idx);
     }
 
-    void processIndentation(const string &source, size_t &i, int lineNumber,
-                            vector<Token> &tokens, vector<Error> &errors)
+    void processIndentation(const string& source, size_t& i, int lineNumber,
+        vector<Token>& tokens, vector<Error>& errors)
     {
         size_t start = i;
         int spaces = 0, tabs = 0;
@@ -649,7 +657,7 @@ private:
         // Error: Mixed tabs and spaces
         if (spaces > 0 && tabs > 0)
         {
-            errors.push_back({"Mixed tabs and spaces in indentation", lineNumber, start});
+            errors.push_back({ "Mixed tabs and spaces in indentation", lineNumber, start });
         }
 
         // Calculate indentation level (1 tab = 4 spaces, adjust as needed)
@@ -668,9 +676,13 @@ private:
             {
                 indentStack.pop_back();
                 tokens.push_back(Token(TokenType::DEDENT, "", lineNumber));
+                // Pop scope ONLY if dedenting past its original indentation level
+                while (!scopeStack.empty() && indentStack.back() <= scopeStack.back().indentLevel) {
+                    scopeStack.pop_back();
+                }
                 if (indentStack.empty())
                 {
-                    errors.push_back({"Dedent exceeds indentation level", lineNumber, start});
+                    errors.push_back({ "Dedent exceeds indentation level", lineNumber, start });
                     indentStack.push_back(0); // Recover
                     break;
                 }
@@ -678,20 +690,38 @@ private:
             // Error: No matching indentation level
             if (indentStack.back() != newIndent)
             {
-                errors.push_back({"Unindent does not match outer level", lineNumber, start});
+                errors.push_back({ "Unindent does not match outer level", lineNumber, start });
             }
         }
         // Equal indentation: Do nothing
     }
+
+    string getScope(const vector<ScopeInfo>& scopeStack) {
+        if (scopeStack.empty())
+        {
+            return "global";
+        }
+        else {
+            string hierarchy = scopeStack.back().name;
+            for (auto it = scopeStack.rbegin() + 1; it != scopeStack.rend(); ++it) {
+                if (!scopeStack.empty()) {
+                    hierarchy += "@";
+                }
+                hierarchy += it->name;
+            }
+
+            return hierarchy;
+        }
+    }
 };
 
 // ----------------------------------------------
-// 5. Parser for basic type inference
+// 7. Parser for basic type inference
 // ----------------------------------------------
 class Parser
 {
 public:
-    Parser(const vector<Token> &tokens, SymbolTable &symTable)
+    Parser(const vector<Token>& tokens, SymbolTable& symTable)
         : tokens(tokens), symbolTable(symTable) {}
 
     void parse()
@@ -699,19 +729,11 @@ public:
         size_t i = 0;
         while (i < tokens.size())
         {
-            const Token &tk = tokens[i];
+            const Token& tk = tokens[i];
 
             if (tk.type == TokenType::DefKeyword || tk.type == TokenType::ClassKeyword)
             {
-                // If we see 'def' or 'class', record that for the next identifier
-                if (tk.lexeme == "def" || tk.lexeme == "class")
-                {
-                    lastKeyword = tk.lexeme;
-                }
-                else
-                {
-                    lastKeyword.clear();
-                }
+                lastKeyword = tk.lexeme;
                 i++;
             }
             else if (tk.type == TokenType::IDENTIFIER)
@@ -762,7 +784,7 @@ public:
                         while (temp < tokens.size())
                         {
                             auto [type, value] = parseExpression(temp);
-                            rhsValues.push_back({type, value});
+                            rhsValues.push_back({ type, value });
                             if (temp < tokens.size() && tokens[temp].type == TokenType::Comma)
                             {
                                 temp++;
@@ -775,7 +797,7 @@ public:
 
                         for (size_t j = 0; j < lhsIdentifiers.size(); ++j)
                         {
-                            const Token &var = lhsIdentifiers[j];
+                            const Token& var = lhsIdentifiers[j];
                             string key = var.lexeme + "@" + var.scope;
                             if (!symbolTable.exist(var.lexeme, var.scope))
                             {
@@ -806,7 +828,7 @@ public:
                         tokens[i + 1].lexeme == "=")
                     {
                         // We have "identifier = ..."
-                        const string &lhsName = tk.lexeme;
+                        const string& lhsName = tk.lexeme;
                         int lineNumber = tk.lineNumber;
                         // Add symbol if not exist
                         string fullName = lhsName + "@" + tk.scope;
@@ -858,8 +880,8 @@ public:
 
 private:
 private:
-    const vector<Token> &tokens;
-    SymbolTable &symbolTable;
+    const vector<Token>& tokens;
+    SymbolTable& symbolTable;
     string lastKeyword;
 
     // ------------------------------------------------------
@@ -871,7 +893,7 @@ private:
     // We'll return the final type and a single literal value only
     // if the entire expression is a single literal. Otherwise, "".
     // ------------------------------------------------------
-    pair<string, string> parseExpression(size_t &i)
+    pair<string, string> parseExpression(size_t& i)
     {
         // Parse the first operand
         auto [accumType, accumValue] = parseOperand(i);
@@ -897,7 +919,7 @@ private:
                 break;
             }
         }
-        return {accumType, accumValue};
+        return { accumType, accumValue };
     }
 
     // ------------------------------------------------------
@@ -907,14 +929,14 @@ private:
     // This re-uses the same logic from a simplified version
     // of "inferTypeOfRHS" but for a single operand only.
     // ------------------------------------------------------
-    pair<string, string> parseOperand(size_t &i)
+    pair<string, string> parseOperand(size_t& i)
     {
         if (i >= tokens.size())
         {
-            return {"unknown", ""};
+            return { "unknown", "" };
         }
 
-        const Token &tk = tokens[i];
+        const Token& tk = tokens[i];
 
         // If it's a numeric literal
         if (tk.type == TokenType::NUMBER)
@@ -923,12 +945,12 @@ private:
             if (tk.lexeme.find('.') != string::npos)
             {
                 i++;
-                return {"float", tk.lexeme};
+                return { "float", tk.lexeme };
             }
             else
             {
                 i++;
-                return {"int", tk.lexeme};
+                return { "int", tk.lexeme };
             }
         }
 
@@ -936,7 +958,7 @@ private:
         if (tk.type == TokenType::STRING_LITERAL)
         {
             i++;
-            return {"string", tk.lexeme};
+            return { "string", tk.lexeme };
         }
 
         // If it's a keyword => might be True/False
@@ -945,10 +967,10 @@ private:
             if (tk.lexeme == "True" || tk.lexeme == "False")
             {
                 i++;
-                return {"bool", tk.lexeme};
+                return { "bool", tk.lexeme };
             }
             i++;
-            return {"unknown", ""};
+            return { "unknown", "" };
         }
 
         // If it's an identifier
@@ -967,7 +989,7 @@ private:
                 symbolTable.table[fullName].usageCount++;
             }
             i++;
-            return {knownType, knownType == "unknown" ? "" : knownValue};
+            return { knownType, knownType == "unknown" ? "" : knownValue };
         }
 
         // if it's a tuple
@@ -986,7 +1008,7 @@ private:
                 i++;
             }
             value = value + ")";
-            return {"tuple", value};
+            return { "tuple", value };
         }
 
         // if it's a list
@@ -1004,7 +1026,7 @@ private:
                 i++;
             }
             value = value + "]";
-            return {"list", value};
+            return { "list", value };
         }
 
         // if it's a dictionary or set
@@ -1027,12 +1049,12 @@ private:
                 i++;
             }
             value = value + "}";
-            return {isSet ? "set" : "dictionary", value};
+            return { isSet ? "set" : "dictionary", value };
         }
 
         // Otherwise unknown
         i++;
-        return {"unknown", ""};
+        return { "unknown", "" };
     }
 
     // ------------------------------------------------------
@@ -1044,7 +1066,7 @@ private:
     // - if there's a conflict (e.g., "string" + "int"), => "unknown"
     // Expand this if you want to handle more complex rules
     // ------------------------------------------------------
-    string unifyTypes(const string &t1, const string &t2)
+    string unifyTypes(const string& t1, const string& t2)
     {
         if (t1 == "unknown" && t2 == "unknown")
             return "unknown";
@@ -1099,13 +1121,9 @@ private:
 };
 
 // ----------------------------------------------
-// 6. Error handles
+// 8. Utility function to read the entire file
 // ----------------------------------------------
-
-// ----------------------------------------------
-// 7. Utility function to read the entire file
-// ----------------------------------------------
-string readFile(const string &filename)
+string readFile(const string& filename)
 {
     ifstream fileStream(filename);
     if (!fileStream.is_open())
@@ -1118,7 +1136,7 @@ string readFile(const string &filename)
 }
 
 // ----------------------------------------------
-// 8. Main
+// 9. Main
 // ----------------------------------------------
 int main()
 {
@@ -1140,8 +1158,8 @@ int main()
         symTable.printSymbols();
 
         // 3. Print out tokens (for demonstration)
-        cout << "Tokens:\n";
-        for (auto &tk : tokens)
+        cout << "\n\nTokens:\n";
+        for (auto& tk : tokens)
         {
             cout << "< ";
             switch (tk.type)
@@ -1328,7 +1346,7 @@ int main()
         // print errors
         printErrors(errors);
     }
-    catch (const exception &ex)
+    catch (const exception& ex)
     {
         cerr << "Error: " << ex.what() << endl;
         return 1;
