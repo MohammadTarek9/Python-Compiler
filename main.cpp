@@ -659,7 +659,9 @@ private:
         {
             errors.push_back({ "Mixed tabs and spaces in indentation", lineNumber, start });
         }
-
+        if (source[i] == '\n') {
+            return;
+        }
         // Calculate indentation level (1 tab = 4 spaces, adjust as needed)
         int newIndent = tabs * 4 + spaces;
 
