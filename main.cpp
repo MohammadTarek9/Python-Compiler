@@ -65,7 +65,9 @@ enum class TokenType
     Colon,
     Comma,
     Dot,
-    Semicolon
+    Semicolon,
+    INDENT,
+    DEDENT
 };
 
 // ----------------------------------------------
@@ -315,20 +317,43 @@ public:
         vector<Token> tokens;
         int lineNumber = 1;
         size_t i = 0;
+        indentStack = {0}; // Reset state
+        atLineStart = true;
+        lineContinuation = false;
 
         while (i < source.size())
         {
-            skipWhitespace(source, i);
+            // Handle indentation at the start of a line (if not a continuation)
+            if (atLineStart && !lineContinuation)
+            {
+                processIndentation(source, i, lineNumber, tokens, errors);
+                atLineStart = false;
+            }
+
+            skipNonLeadingWhitespace(source, i);
+
             if (i >= source.size())
                 break;
 
             char c = source[i];
 
-            // Handle newlines
+            // Handle newlines and reset flags
             if (c == '\n')
             {
                 lineNumber++;
                 i++;
+                atLineStart = true;
+                lineContinuation = false; // Reset continuation
+                continue;
+            }
+
+            // Check for line continuation (backslash before newline)
+            if (c == '\\' && i + 1 < source.size() && source[i + 1] == '\n')
+            {
+                lineContinuation = true;
+                i += 2; // Skip both '\' and '\n'
+                lineNumber++;
+                atLineStart = true;
                 continue;
             }
 
@@ -378,7 +403,7 @@ public:
                     if (word == "def" || word == "class")
                     {
                         tokens.push_back(Token(pythonKeywords[word], word, lineNumber));
-                        skipWhitespace(source, i);
+                        skipNonLeadingWhitespace(source, i);
                         size_t identifierStart = i;
                         while (i < source.size() && (isalnum(static_cast<unsigned char>(source[i])) || source[i] == '_'))
                         {
@@ -488,13 +513,25 @@ public:
             // Unknown character - add error but keep going
             errors.push_back({"Invalid character '" + string(1, c) + "'", lineNumber, i});
             i++;
+            atLineStart = false;
+        }
+
+        // Add DEDENT tokens for remaining indentation levels at EOF
+        while (indentStack.size() > 1)
+        {
+            indentStack.pop_back();
+            tokens.push_back(Token(TokenType::DEDENT, "", lineNumber));
         }
 
         return tokens;
     }
 
 private:
-    void skipWhitespace(const string &source, size_t &idx)
+    vector<int> indentStack = {0}; // Track indentation levels (e.g., [0, 4, 8])
+    bool atLineStart = true;       // Flag for newline handling
+    bool lineContinuation = false; // Track line continuation via '\'
+
+    void skipNonLeadingWhitespace(const string &source, size_t &idx)
     {
         static const regex ws_regex(R"(^[ \t\r]+)");
         smatch match;
@@ -503,9 +540,9 @@ private:
             return;
 
         string remaining = source.substr(idx);
-        if (regex_search(remaining, match, ws_regex))
+        if (regex_search(remaining, match, ws_regex, regex_constants::match_continuous))
         {
-            idx += match.length();
+            idx += match.length(); // Advance past matched whitespace
         }
     }
 
@@ -591,6 +628,60 @@ private:
             throw UnterminatedStringError(start_line, start);
         }
         throw UnterminatedStringError(start_line, idx);
+    }
+
+    void processIndentation(const string &source, size_t &i, int lineNumber,
+                            vector<Token> &tokens, vector<Error> &errors)
+    {
+        size_t start = i;
+        int spaces = 0, tabs = 0;
+
+        // Count leading spaces/tabs
+        while (i < source.size() && (source[i] == ' ' || source[i] == '\t'))
+        {
+            if (source[i] == ' ')
+                spaces++;
+            else
+                tabs++;
+            i++;
+        }
+
+        // Error: Mixed tabs and spaces
+        if (spaces > 0 && tabs > 0)
+        {
+            errors.push_back({"Mixed tabs and spaces in indentation", lineNumber, start});
+        }
+
+        // Calculate indentation level (1 tab = 4 spaces, adjust as needed)
+        int newIndent = tabs * 4 + spaces;
+
+        // Compare with current indentation
+        if (newIndent > indentStack.back())
+        {
+            indentStack.push_back(newIndent);
+            tokens.push_back(Token(TokenType::INDENT, "", lineNumber));
+        }
+        else if (newIndent < indentStack.back())
+        {
+            // Pop until matching indentation level
+            while (indentStack.back() > newIndent)
+            {
+                indentStack.pop_back();
+                tokens.push_back(Token(TokenType::DEDENT, "", lineNumber));
+                if (indentStack.empty())
+                {
+                    errors.push_back({"Dedent exceeds indentation level", lineNumber, start});
+                    indentStack.push_back(0); // Recover
+                    break;
+                }
+            }
+            // Error: No matching indentation level
+            if (indentStack.back() != newIndent)
+            {
+                errors.push_back({"Unindent does not match outer level", lineNumber, start});
+            }
+        }
+        // Equal indentation: Do nothing
     }
 };
 
@@ -1201,6 +1292,12 @@ int main()
                 break;
             case TokenType::STRING_LITERAL:
                 cout << "STRING_LITERAL";
+                break;
+            case TokenType::INDENT:
+                cout << "INDENT";
+                break;
+            case TokenType::DEDENT:
+                cout << "DEDENT";
                 break;
             case TokenType::UNKNOWN:
                 cout << "UNKNOWN";
