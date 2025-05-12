@@ -1487,7 +1487,6 @@ public:
         if (currentToken().type == TokenType::NUMBER)
         {
             factorNode->addChild(new ParseTreeNode(consume(TokenType::NUMBER).lexeme));
-            consume(TokenType::NUMBER);
         }
         return factorNode;
     }
