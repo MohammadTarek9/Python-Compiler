@@ -1,0 +1,61 @@
+program → (function | statement)*
+
+function → 'def' IDENTIFIER '(' parameters ')' ':' block
+parameters → (IDENTIFIER (',' IDENTIFIER)*)?
+
+block → NEWLINE INDENT statement+ DEDENT
+
+statement → assignment_stmt
+          | return_stmt
+          | iterative_stmt
+          | conditional_stmt
+          | function_call_stmt
+          | pass_stmt
+          | break_stmt
+          | continue_stmt
+		  | import_stmt
+          | raise_stmt
+          | try_stmt
+          | class_def
+
+assignment_stmt → IDENTIFIER ASSIGN_OP expression
+ASSIGN_OP → '=' | '+=' | '-=' | '*=' | '/=' | '%=' | '//=' | '**='
+
+return_stmt → 'return' expression?
+pass_stmt → 'pass'
+break_stmt → 'break'
+continue_stmt → 'continue'
+
+import_stmt → 'import' dotted_name (',' dotted_name)* 
+            | 'from' dotted_name 'import' (IDENTIFIER | '*')
+
+dotted_name → IDENTIFIER ('.' IDENTIFIER)*
+
+raise_stmt → 'raise' expression
+
+try_stmt → 'try' ':' block
+           ('except' (IDENTIFIER)? ':' block)+
+           ('else' ':' block)?
+           ('finally' ':' block)?
+
+class_def → 'class' IDENTIFIER ('(' IDENTIFIER ')')? ':' block
+
+iterative_stmt → 'while' expression ':' block
+               | 'for' IDENTIFIER 'in' expression ':' block
+
+conditional_stmt → 'if' expression ':' block ('elif' expression ':' block)* ('else' ':' block)?
+
+function_call_stmt → IDENTIFIER '(' arguments ')'
+
+arguments → (expression (',' expression)*)?
+
+expression → or_expr
+
+or_expr → and_expr ('or' and_expr)*
+and_expr → not_expr ('and' not_expr)*
+not_expr → 'not' not_expr | comparison
+comparison → arithmetic_expr (COMP_OP arithmetic_expr)*
+
+arithmetic_expr → term (('+' | '-') term)*
+term → factor (('*' | '/' | '%') factor)*
+factor → INTEGER | FLOAT | IDENTIFIER | '(' expression ')' | function_call_stmt | STRING_LITERAL
