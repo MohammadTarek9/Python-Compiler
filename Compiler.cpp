@@ -1281,14 +1281,9 @@ public:
         while (current < tokens.size())
         {
             if (currentToken().type == TokenType::DefKeyword)
-            {
-                auto* function = parseFunction();
-                programNode->addChild(function);
-            }
-            else {
-                auto* statement = parseStatement();
-                programNode->addChild(statement);
-            }
+                programNode->addChild(parseFunction());
+            else
+                programNode->addChild(parseStatement());
         }
 
         return programNode;
@@ -1341,44 +1336,37 @@ public:
     }
 
     ParseTreeNode* parseConditionalStmt() {
-        consume(TokenType::IfKeyword);
-        auto* expression = parseExpression();
-        consume(TokenType::Colon);
-        auto* ifBlock = parseBlock();
 
-        auto* node = new ParseTreeNode("if_statement");
-        node->addChild(expression);
-        node->addChild(ifBlock);
+        auto* ifNode = new ParseTreeNode("conditional_statement");
+        ifNode->addChild(new ParseTreeNode(consume(TokenType::IfKeyword).lexeme));
+        ifNode->addChild(parseExpression());
+        ifNode->addChild(new ParseTreeNode(consume(TokenType::Colon).lexeme));
+        ifNode->addChild(parseBlock());
 
         while (current < tokens.size() && currentToken().type == TokenType::ElifKeyword) {
-            consume(TokenType::ElifKeyword);
-            auto* elifCondition = parseExpression();
-            consume(TokenType::Colon);
-            auto* elifBlock = parseBlock();
-
             auto* elifNode = new ParseTreeNode("elif_clause");
-            elifNode->addChild(elifCondition);
-            elifNode->addChild(elifBlock);
-            node->addChild(elifNode);
+            elifNode->addChild(new ParseTreeNode(consume(TokenType::ElifKeyword).lexeme));
+            elifNode->addChild(parseExpression());
+            elifNode->addChild(new ParseTreeNode(consume(TokenType::Colon).lexeme));
+            elifNode->addChild(parseBlock());
+            ifNode->addChild(elifNode);
         }
 
         if (current < tokens.size() && currentToken().type == TokenType::ElseKeyword) {
-            consume(TokenType::ElseKeyword);
-            consume(TokenType::Colon);
-            auto* elseBlock = parseBlock();
             auto* elseNode = new ParseTreeNode("else_clause");
-            elseNode->addChild(elseBlock);
-            node->addChild(elseNode);
+            elseNode->addChild(new ParseTreeNode(consume(TokenType::ElseKeyword).lexeme));
+            elseNode->addChild(new ParseTreeNode(consume(TokenType::Colon).lexeme));
+            elseNode->addChild(parseBlock());
+            ifNode->addChild(elseNode);
         }
 
-        return node;
+        return ifNode;
     }
 
     ParseTreeNode* parseAssignmentStmt() {
         ParseTreeNode* assignNode = new ParseTreeNode("assignment");
         
-        consume(TokenType::IDENTIFIER);
-        assignNode->addChild(new ParseTreeNode("Identifier"));
+        assignNode->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
         assignNode->addChild(parseAssignOp());
         assignNode->addChild(parseExpression());
         return assignNode;
@@ -1415,8 +1403,7 @@ public:
         orNode->addChild(parseAndExpr());
         while (current < tokens.size() && currentToken().type == TokenType::OrKeyword)
         {
-            consume(TokenType::OrKeyword);
-            orNode->addChild(new ParseTreeNode("or"));
+            orNode->addChild(new ParseTreeNode(consume(TokenType::OrKeyword).lexeme));
             orNode->addChild(parseAndExpr());
         }
         return orNode;
@@ -1427,8 +1414,7 @@ public:
         andNode->addChild(parseNotExpr());
         while (current < tokens.size() && currentToken().type == TokenType::AndKeyword)
         {
-            consume(TokenType::AndKeyword);
-            andNode->addChild(new ParseTreeNode("and"));
+            andNode->addChild(new ParseTreeNode(consume(TokenType::AndKeyword).lexeme));
             andNode->addChild(parseNotExpr());
         }
         return andNode;
@@ -1438,8 +1424,7 @@ public:
         ParseTreeNode* notNode = new ParseTreeNode("not_expression");
         if (current < tokens.size() && currentToken().type == TokenType::NotKeyword)
         {
-            consume(TokenType::NotKeyword);
-            notNode->addChild(new ParseTreeNode("not"));
+            notNode->addChild(new ParseTreeNode(consume(TokenType::NotKeyword).lexeme));
             notNode->addChild(parseNotExpr());
         }
         else {
@@ -1460,7 +1445,7 @@ public:
                 currentToken().lexeme == ">= " ||
                 currentToken().lexeme == "<=")
             {
-                compNode->addChild(new ParseTreeNode(currentToken().lexeme));
+                compNode->addChild(new ParseTreeNode(consume(TokenType::OPERATOR).lexeme));
             }
             else throw consumeError();
             compNode->addChild(parseArithmetic());
@@ -1475,7 +1460,7 @@ public:
         {
             if (currentToken().lexeme == "+" || currentToken().lexeme == "-")
             {
-                arithmNode->addChild(new ParseTreeNode(currentToken().lexeme));
+                arithmNode->addChild(new ParseTreeNode(consume(TokenType::OPERATOR).lexeme));
                 arithmNode->addChild(parseTerm());
             }
         }
@@ -1489,7 +1474,7 @@ public:
         {
             if (currentToken().lexeme == "*" || currentToken().lexeme == "/" || currentToken().lexeme == "%")
             {
-                termNode->addChild(new ParseTreeNode(currentToken().lexeme));
+                termNode->addChild(new ParseTreeNode(consume(TokenType::OPERATOR).lexeme));
                 termNode->addChild(parseFactor());
             }
             else throw consumeError();
@@ -1501,7 +1486,7 @@ public:
         ParseTreeNode* factorNode = new ParseTreeNode("factor");
         if (currentToken().type == TokenType::NUMBER)
         {
-            factorNode->addChild(new ParseTreeNode(currentToken().lexeme));
+            factorNode->addChild(new ParseTreeNode(consume(TokenType::NUMBER).lexeme));
             consume(TokenType::NUMBER);
         }
         return factorNode;
