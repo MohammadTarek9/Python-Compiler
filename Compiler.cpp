@@ -1825,15 +1825,35 @@ public:
 		ParseTreeNode *assignNode = new ParseTreeNode("assignment");
 		try
 		{
-			assignNode->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
+			// Parse LHS identifiers
+			ParseTreeNode *lhs = new ParseTreeNode("lhs");
+			lhs->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
+			while (currentToken().type == TokenType::Comma)
+			{
+				lhs->addChild(new ParseTreeNode(consume(TokenType::Comma).lexeme));
+				lhs->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
+			}
+			assignNode->addChild(lhs);
+
+			// Assign operator
 			assignNode->addChild(parseAssignOp());
-			assignNode->addChild(parseExpression());
+
+			// Parse RHS expressions
+			ParseTreeNode *rhs = new ParseTreeNode("rhs");
+			rhs->addChild(parseExpression());
+			while (currentToken().type == TokenType::Comma)
+			{
+				rhs->addChild(new ParseTreeNode(consume(TokenType::Comma).lexeme));
+				rhs->addChild(parseExpression());
+			}
+			assignNode->addChild(rhs);
 		}
 		catch (const consumeError &)
 		{
 			error("Could not parse assignment");
 			throw consumeError();
 		}
+
 		return assignNode;
 	}
 
@@ -1984,7 +2004,7 @@ public:
 			compNode->addChild(parseArithmetic());
 			while (current < tokens.size() && currentToken().type == TokenType::OPERATOR)
 			{
-				compNode->addChild(parseCompOp());
+				compNode->addChild(parseOp());
 				compNode->addChild(parseArithmetic());
 			}
 		}
@@ -1996,15 +2016,18 @@ public:
 		return compNode;
 	}
 
-	ParseTreeNode *parseCompOp()
+	ParseTreeNode *parseOp()
 	{
-		ParseTreeNode *assignOpNode = new ParseTreeNode("COMP_OP");
+		ParseTreeNode *assignOpNode = new ParseTreeNode("OP");
 		if (currentToken().lexeme == "==" ||
 			currentToken().lexeme == "!=" ||
 			currentToken().lexeme == "<" ||
 			currentToken().lexeme == ">" ||
 			currentToken().lexeme == ">= " ||
-			currentToken().lexeme == "<=")
+			currentToken().lexeme == "<=" ||
+			currentToken().lexeme == "&" ||
+			currentToken().lexeme == "|")
+
 		{
 			try
 			{
@@ -2114,10 +2137,25 @@ public:
 			}
 			else if (currentToken().type == TokenType::LeftParenthesis)
 			{
-				factorNode->addChild(new ParseTreeNode(consume(TokenType::LeftParenthesis).lexeme));
-				factorNode->addChild(parseExpression());
-				factorNode->addChild(new ParseTreeNode(consume(TokenType::RightParenthesis).lexeme));
+				ParseTreeNode *tupleOrParenNode = new ParseTreeNode("tuple_or_group");
+				tupleOrParenNode->addChild(new ParseTreeNode(consume(TokenType::LeftParenthesis).lexeme));
+
+				tupleOrParenNode->addChild(parseExpression());
+
+				if (currentToken().type == TokenType::Comma)
+				{
+					// It's a tuple
+					while (currentToken().type == TokenType::Comma)
+					{
+						tupleOrParenNode->addChild(new ParseTreeNode(consume(TokenType::Comma).lexeme));
+						tupleOrParenNode->addChild(parseExpression());
+					}
+				}
+
+				tupleOrParenNode->addChild(new ParseTreeNode(consume(TokenType::RightParenthesis).lexeme));
+				factorNode->addChild(tupleOrParenNode);
 			}
+
 			else if (currentToken().type == TokenType::FalseKeyword)
 			{
 				factorNode->addChild(new ParseTreeNode(consume(TokenType::FalseKeyword).lexeme));
@@ -2126,6 +2164,45 @@ public:
 			{
 				factorNode->addChild(new ParseTreeNode(consume(TokenType::TrueKeyword).lexeme));
 			}
+			else if (currentToken().type == TokenType::LeftBracket)
+			{
+				// list
+				ParseTreeNode *listNode = new ParseTreeNode("list_literal");
+				listNode->addChild(new ParseTreeNode(consume(TokenType::LeftBracket).lexeme));
+				if (currentToken().type != TokenType::RightBracket)
+				{
+					listNode->addChild(parseExpression());
+					while (currentToken().type == TokenType::Comma)
+					{
+						listNode->addChild(new ParseTreeNode(consume(TokenType::Comma).lexeme));
+						listNode->addChild(parseExpression());
+					}
+				}
+				listNode->addChild(new ParseTreeNode(consume(TokenType::RightBracket).lexeme));
+				factorNode->addChild(listNode);
+			}
+			else if (currentToken().type == TokenType::LeftBrace)
+			{
+				// dict
+				ParseTreeNode *dictNode = new ParseTreeNode("dict_literal");
+				dictNode->addChild(new ParseTreeNode(consume(TokenType::LeftBrace).lexeme));
+				if (currentToken().type != TokenType::RightBrace)
+				{
+					dictNode->addChild(parseExpression());
+					dictNode->addChild(new ParseTreeNode(consume(TokenType::Colon).lexeme));
+					dictNode->addChild(parseExpression());
+					while (currentToken().type == TokenType::Comma)
+					{
+						dictNode->addChild(new ParseTreeNode(consume(TokenType::Comma).lexeme));
+						dictNode->addChild(parseExpression());
+						dictNode->addChild(new ParseTreeNode(consume(TokenType::Colon).lexeme));
+						dictNode->addChild(parseExpression());
+					}
+				}
+				dictNode->addChild(new ParseTreeNode(consume(TokenType::RightBrace).lexeme));
+				factorNode->addChild(dictNode);
+			}
+
 			else
 			{
 				error("Could not parse Factor");
@@ -2184,7 +2261,7 @@ int main()
 {
 	try
 	{
-		string sourceCode = readFile("script.py");
+		string sourceCode = readFile("seif.py");
 
 		vector<Error> errors;
 		// 2. Lexical analysis: produce tokens

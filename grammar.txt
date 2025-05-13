@@ -18,7 +18,10 @@ statement → assignment_stmt
           | try_stmt
           | class_def
 
-assignment_stmt → IDENTIFIER ASSIGN_OP expression
+assignment_stmt → identifier_list ASSIGN_OP expression_list
+identifier_list → IDENTIFIER (',' IDENTIFIER)*
+expression_list → expression (',' expression)*
+
 ASSIGN_OP → '=' | '+=' | '-=' | '*=' | '/=' | '%=' | '//=' | '**='
 
 return_stmt → 'return' expression?
@@ -54,8 +57,25 @@ expression → or_expr
 or_expr → and_expr ('or' and_expr)*
 and_expr → not_expr ('and' not_expr)*
 not_expr → 'not' not_expr | comparison
-comparison → arithmetic_expr (COMP_OP arithmetic_expr)*
+comparison → arithmetic_expr (OP arithmetic_expr)*
+
+OP → == | != | < | > | >= | <= 
 
 arithmetic_expr → term (('+' | '-') term)*
 term → factor (('*' | '/' | '%') factor)*
-factor → INTEGER | FLOAT | IDENTIFIER | '(' expression ')' | IDENTIFIER '(' arguments ')' | STRING_LITERAL | True | False
+
+factor → INTEGER 
+       | FLOAT 
+       | IDENTIFIER 
+       | STRING_LITERAL 
+       | True 
+       | False 
+       | list_literal 
+       | tuple_literal 
+       | dict_literal 
+       | '(' expression ')' 
+       | IDENTIFIER '(' arguments ')'
+
+list_literal → '[' (expression (',' expression)*)? ']'
+tuple_literal → '(' (expression (',' expression)+) ')'
+dict_literal → '{' (expression ':' expression (',' expression ':' expression)*)? '}'
