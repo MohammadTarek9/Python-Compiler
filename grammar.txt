@@ -26,15 +26,15 @@ pass_stmt → 'pass'
 break_stmt → 'break'
 continue_stmt → 'continue'
 
-import_stmt → 'import' dotted_name (',' dotted_name)* 
-            | 'from' dotted_name 'import' (IDENTIFIER | '*')
+import_stmt → 'import' dotted_name ('as' IDENTIFIER)? (',' dotted_name ('as' IDENTIFIER)?)* 
+            | 'from' dotted_name 'import' (IDENTIFIER ('as' IDENTIFIER)? | '*')
 
 dotted_name → IDENTIFIER ('.' IDENTIFIER)*
 
 raise_stmt → 'raise' expression
 
 try_stmt → 'try' ':' block
-           ('except' (IDENTIFIER)? ':' block)+
+           ('except' (IDENTIFIER ('as' IDENTIFIER)? )? ':' block)+
            ('else' ':' block)?
            ('finally' ':' block)?
 
@@ -45,7 +45,7 @@ iterative_stmt → 'while' expression ':' block
 
 conditional_stmt → 'if' expression ':' block ('elif' expression ':' block)* ('else' ':' block)?
 
-function_call_stmt → IDENTIFIER '(' arguments ')'
+function_call_stmt → IDENTIFIER '(' arguments ')' | dotted_name '(' arguments ')'
 
 arguments → (expression (',' expression)*)?
 
