@@ -2251,6 +2251,43 @@ string readFile(const string &filename)
 	return buffer.str();
 }
 
+// Recursive helper to export node and its children
+void exportToDot(ParseTreeNode *node, ofstream &out, int &nodeId, int parentId = -1)
+{
+	int currentId = nodeId++;
+
+	// Escape double quotes in the label
+	std::string safeLabel = node->label;
+	size_t pos = 0;
+	while ((pos = safeLabel.find('"', pos)) != std::string::npos)
+	{
+		safeLabel.replace(pos, 1, "\\\"");
+		pos += 2; // move past the escaped quote
+	}
+
+	out << "    node" << currentId << " [label=\"" << safeLabel << "\"];\n";
+	if (parentId != -1)
+	{
+		out << "    node" << parentId << " -> node" << currentId << ";\n";
+	}
+	for (auto child : node->children)
+	{
+		exportToDot(child, out, nodeId, currentId);
+	}
+}
+
+// Export the full tree to a DOT file
+void saveTreeToDot(ParseTreeNode *root, const string &filename)
+{
+	ofstream out(filename);
+	out << "digraph ParseTree {\n";
+	out << "    node [shape=box];\n";
+	int id = 0;
+	exportToDot(root, out, id);
+	out << "}\n";
+	out.close();
+}
+
 #include <string>
 #include <unordered_map>
 
@@ -2470,6 +2507,7 @@ int main()
 		ParseTreeNode *root = sa.parseProgram();
 		cout << "\n\n\n\n";
 		printParseTree(root);
+		saveTreeToDot(root, "tree.dot");
 	}
 	catch (const exception &ex)
 	{
