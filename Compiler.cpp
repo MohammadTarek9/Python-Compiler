@@ -1290,10 +1290,33 @@ public:
     }
 
     ParseTreeNode* parseFunction() {
-        ParseTreeNode* node = new ParseTreeNode("function");
+        ParseTreeNode* funcNode = new ParseTreeNode("function");
+    
+        funcNode->addChild(new ParseTreeNode(consume(TokenType::DefKeyword).lexeme));
+        funcNode->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
+        funcNode->addChild(new ParseTreeNode(consume(TokenType::LeftParenthesis).lexeme));
+        funcNode->addChild(parseParameters());
+        funcNode->addChild(new ParseTreeNode(consume(TokenType::RightParenthesis).lexeme));
+        funcNode->addChild(new ParseTreeNode(consume(TokenType::Colon).lexeme));
+        funcNode->addChild(parseBlock());
 
-        return node;
+        return funcNode;
     }
+
+    ParseTreeNode* parseParameters() {
+    ParseTreeNode* paramsNode = new ParseTreeNode("parameters");
+    
+    if (currentToken().type != TokenType::RightParenthesis) {
+        paramsNode->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
+        
+        while (currentToken().type == TokenType::Comma) {
+            paramsNode->addChild(new ParseTreeNode(consume(TokenType::Comma).lexeme));
+            paramsNode->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
+        }
+    }
+    
+    return paramsNode;
+}
 
     ParseTreeNode* parseStatement() {
         ParseTreeNode* stmtNode = new ParseTreeNode("statement");
@@ -1318,21 +1341,53 @@ public:
     }
 
     ParseTreeNode* parseBlock() {
-        ParseTreeNode* node = new ParseTreeNode("block");
+        ParseTreeNode* blockNode = new ParseTreeNode("block");
 
-        return node;
+        return blockNode;
     }
 
-    ParseTreeNode* parseWhileStmt() {
-        ParseTreeNode* node = new ParseTreeNode("while_statement");
 
-        return node;
+   ParseTreeNode* parseWhileStmt() {
+        ParseTreeNode* whileNode = new ParseTreeNode("while_statement");
+    
+        whileNode->addChild(new ParseTreeNode(consume(TokenType::WhileKeyword).lexeme));
+        whileNode->addChild(parseExpression());
+        whileNode->addChild(new ParseTreeNode(consume(TokenType::Colon).lexeme));
+        whileNode->addChild(parseBlock());
+    
+        return whileNode;
     }
 
     ParseTreeNode* parseForStmt() {
-        ParseTreeNode* node = new ParseTreeNode("for_statement");
+        ParseTreeNode* forNode = new ParseTreeNode("for_statement");
+    
+        forNode->addChild(new ParseTreeNode(consume(TokenType::ForKeyword).lexeme));
+        forNode->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
+        forNode->addChild(new ParseTreeNode(consume(TokenType::InKeyword).lexeme));
+        forNode->addChild(parseExpression());
+        forNode->addChild(new ParseTreeNode(consume(TokenType::Colon).lexeme));
+        forNode->addChild(parseBlock());
+    
+        return forNode;
+}
 
-        return node;
+    ParseTreeNode* parseClassDef() {
+        ParseTreeNode* classNode = new ParseTreeNode("class_def");
+
+        classNode->addChild(new ParseTreeNode(consume(TokenType::ClassKeyword).lexeme));
+        classNode->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
+
+        if (currentToken().type == TokenType::LeftParenthesis) {
+            
+            classNode->addChild(new ParseTreeNode(consume(TokenType::LeftParenthesis).lexeme));
+            classNode->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
+            classNode->addChild(new ParseTreeNode(consume(TokenType::RightParenthesis).lexeme));
+        }
+
+        classNode->addChild(new ParseTreeNode(consume(TokenType::Colon).lexeme));
+        classNode->addChild(parseBlock());
+
+        return classNode;
     }
 
     ParseTreeNode* parseConditionalStmt() {
@@ -1532,7 +1587,7 @@ int main()
 {
     try
     {
-        string sourceCode = readFile("script.py");
+        string sourceCode = readFile("script2.py");
 
         vector<Error> errors;
         // 2. Lexical analysis: produce tokens

@@ -58,4 +58,4 @@ comparison → arithmetic_expr (COMP_OP arithmetic_expr)*
 
 arithmetic_expr → term (('+' | '-') term)*
 term → factor (('*' | '/' | '%') factor)*
-factor → INTEGER | FLOAT | IDENTIFIER | '(' expression ')' | function_call_stmt | STRING_LITERAL
+factor → INTEGER | FLOAT | IDENTIFIER | '(' expression ')' | IDENTIFIER '(' arguments ')' | STRING_LITERAL | True | False
