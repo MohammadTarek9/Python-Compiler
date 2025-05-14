@@ -11,7 +11,7 @@ class MyClass:
 
     def greet(self):
         # Greet method
-        print(f"Hello, {self.name}!")
+        print(f"Hello")
 
 def myFunction(x, y=10):
     """
@@ -33,13 +33,13 @@ def myFunction(x, y=10):
     mychar = 'a'
     for i in myList:
         print(i)
-    print("hey") if x > 0 else print("hello")
+    #print("hey") if x > 0 else print("hello")
     mySet = {4, 5, 6}
     myDict = {7: "seven", 8: "eight", 9: "nine"}
     myTuple = (0, 1, 2)
     myTuple2 = (12+14) # not handled as a tuple
     myTuple3 = (12) # handled as a tuple
-    wrong_tuple = (12, 14
+    #wrong_tuple = (12, 14
     names = ["hey", "hello", "hi"]
     newSet = {":", ":(", ":D"} # should be a set not a dictionary
     # do something
@@ -49,7 +49,7 @@ def myFunction(x, y=10):
     elif total < 100:
         return False
     else:
-        return "Result is {}".format(total)
+        return None
 wqt = 10
 
 def main():
@@ -71,18 +71,18 @@ def main():
     wrt = 10
     qq = wqt + wrt
     aaa, bbb = 1, 2
-    num = 01
+    num = 101
     rrrr,sss="hey","hello"
     www = rrrr + sss
     tttttt = 4
     rrrrrr = 5
-    unterminated_string = "This is an unterminated string
-    unterminated_string_single = 'This is an unterminated string
+    unterminated_string = "This is an unterminated string"
+    unterminated_string_single = 'This is an unterminated string'
     qqqqqq,pppppp = tttttt, rrrrrr
     alpha,beta,gamma = 5,6,7
     qwqwqw, rrr = [1, 2], [3, 4]
     test10,test11= [1,4]
-    print(f"Test3: {test3}")
+    print("Hello World")
     print(result)
 if __name__ == "__main__":
     main()

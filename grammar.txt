@@ -47,7 +47,7 @@ class_def → 'class' IDENTIFIER ('(' IDENTIFIER ')')? ':' block
 iterative_stmt → 'while' expression ':' block
                | 'for' IDENTIFIER 'in' expression ':' block
 
-conditional_stmt → 'if' expression ':' block ('elif' expression ':' block)* ('else' ':' block)?
+conditional_stmt → 'if' expression ':' block ('elif' expression ':' block)* ('else' ':' block)? | block 'if' expression 'else' block
 
 function_call_stmt → IDENTIFIER '(' arguments ')' | dotted_name '(' arguments ')'
 

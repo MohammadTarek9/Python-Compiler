@@ -1297,7 +1297,8 @@ public:
 
 	Token &peekToken()
 	{
-		return (current + 1 < tokens.size()) ? tokens[current + 1] : tokens[current];
+		static Token dummy(TokenType::UNKNOWN, "", -1, "");
+    	return (current + 1 < tokens.size()) ? tokens[current + 1] : dummy;
 	}
 
 	ParseTreeNode *parseProgram()
@@ -1848,7 +1849,7 @@ public:
 			// Parse LHS identifiers
 			ParseTreeNode *lhs = new ParseTreeNode("lhs");
 			lhs->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
-			while (currentToken().type == TokenType::Comma)
+			while (current < tokens.size() && currentToken().type == TokenType::Comma)
 			{
 				lhs->addChild(new ParseTreeNode(consume(TokenType::Comma).lexeme));
 				lhs->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
@@ -1861,7 +1862,7 @@ public:
 			// Parse RHS expressions
 			ParseTreeNode *rhs = new ParseTreeNode("rhs");
 			rhs->addChild(parseExpression());
-			while (currentToken().type == TokenType::Comma)
+			while (current < tokens.size() && currentToken().type == TokenType::Comma)
 			{
 				rhs->addChild(new ParseTreeNode(consume(TokenType::Comma).lexeme));
 				rhs->addChild(parseExpression());
@@ -2316,8 +2317,7 @@ void saveTreeToDot(ParseTreeNode *root, const string &filename)
 // ----------------------------------------------
 int main()
 {
-	try
-	{
+	
 		string sourceCode = readFile("script2.py");
 
 		vector<Error> errors;
@@ -2528,11 +2528,7 @@ int main()
 		cout << "\n\n\n\n";
 		printParseTree(root);
 		saveTreeToDot(root, "tree.dot");
-	}
-	catch (const exception &ex)
-	{
-		cerr << "Error: " << ex.what() << endl;
-		return 1;
-	}
+	
+	
 	return 0;
 }

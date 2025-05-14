@@ -1,9 +1,10 @@
-"""This is a simple script that demonstrates"""
-
 import math as m
-
+"this is a multi line  comment aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa hello this is me i am here with everyone here please please help me"
 x = 10
 y = 8
+
+def my_function(x, y=10):
+    print("hey and hello")
 try:
     if x > y:
         print("x is greater than y")
