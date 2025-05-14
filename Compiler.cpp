@@ -1361,12 +1361,12 @@ public:
 		{
 			if (current < tokens.size() && currentToken().type != TokenType::RightParenthesis)
 			{
-				paramsNode->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
+				paramsNode->addChild(parseParameter());
 
 				while (current < tokens.size() && currentToken().type == TokenType::Comma)
 				{
 					paramsNode->addChild(new ParseTreeNode(consume(TokenType::Comma).lexeme));
-					paramsNode->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
+					paramsNode->addChild(parseParameter());
 				}
 			}
 		}
@@ -1376,6 +1376,26 @@ public:
 			throw consumeError();
 		}
 		return paramsNode;
+	}
+
+	ParseTreeNode *parseParameter()
+	{
+		ParseTreeNode *paramNode = new ParseTreeNode("parameter");
+		try
+		{
+			paramNode->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
+			if (current < tokens.size() && currentToken().type == TokenType::OPERATOR && currentToken().lexeme == "=")
+			{
+				paramNode->addChild(new ParseTreeNode(consume(TokenType::OPERATOR).lexeme));
+				paramNode->addChild(parseExpression());
+			}
+		}
+		catch (const consumeError &)
+		{
+			error("Could not parse parameter");
+			throw consumeError();
+		}
+		return paramNode;
 	}
 
 	ParseTreeNode *parseStatement()
@@ -2023,7 +2043,7 @@ public:
 			currentToken().lexeme == "!=" ||
 			currentToken().lexeme == "<" ||
 			currentToken().lexeme == ">" ||
-			currentToken().lexeme == ">= " ||
+			currentToken().lexeme == ">=" ||
 			currentToken().lexeme == "<=" ||
 			currentToken().lexeme == "&" ||
 			currentToken().lexeme == "|")
@@ -2298,7 +2318,7 @@ int main()
 {
 	try
 	{
-		string sourceCode = readFile("seif.py");
+		string sourceCode = readFile("script2.py");
 
 		vector<Error> errors;
 		// 2. Lexical analysis: produce tokens

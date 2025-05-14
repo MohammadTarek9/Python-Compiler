@@ -1,5 +1,4 @@
-"""
-This is a simple script that demonstrates the use of try-except-finally blocks in Python."""
+"""This is a simple script that demonstrates"""
 
 import math as m
 

@@ -1,7 +1,8 @@
 program → (function | statement)*
 
 function → 'def' IDENTIFIER '(' parameters ')' ':' block
-parameters → (IDENTIFIER (',' IDENTIFIER)*)?
+parameters → (parameter (',' parameter)*)?
+parameter → IDENTIFIER ('=' expression)?
 
 block → NEWLINE INDENT statement+ DEDENT
 
