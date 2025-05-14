@@ -2317,7 +2317,7 @@ void saveTreeToDot(ParseTreeNode *root, const string &filename)
 // ----------------------------------------------
 int main()
 {
-	
+	try{
 		string sourceCode = readFile("script2.py");
 
 		vector<Error> errors;
@@ -2529,6 +2529,12 @@ int main()
 		printParseTree(root);
 		saveTreeToDot(root, "tree.dot");
 	
+	}
+	catch (const exception &ex)
+	{
+		cerr << "Error: " << ex.what() << endl;
+		return 1;
+	}
 	
 	return 0;
 }
