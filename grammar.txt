@@ -76,6 +76,7 @@ factor → INTEGER
        | list_literal
        | tuple_literal
        | dict_literal
+       | set_literal
        | '(' expression ')'
        | dotted_name '(' arguments ')'  // method call
        | IDENTIFIER '(' arguments ')'   // function call
@@ -85,3 +86,4 @@ dotted_name → IDENTIFIER ('.' IDENTIFIER)*
 list_literal → '[' (expression (',' expression)*)? ']'
 tuple_literal → '(' (expression (',' expression)+) ')'
 dict_literal → '{' (expression ':' expression (',' expression ':' expression)*)? '}'
+set_literal → '{' expression (',' expression)* '}'

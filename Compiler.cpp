@@ -2331,28 +2331,60 @@ public:
 			}
 			else if (currentToken().type == TokenType::LeftBrace)
 			{
-				// dict
-				ParseTreeNode *dictNode = new ParseTreeNode("dict_literal");
-				dictNode->addChild(new ParseTreeNode(consume(TokenType::LeftBrace).lexeme));
-				if (currentToken().type != TokenType::RightBrace)
+				// dict or set
+				size_t temp = current + 1;
+				bool isDict = false;
+				
+				while (temp < tokens.size() && tokens[temp].type != TokenType::RightBrace)
 				{
-					dictNode->addChild(parseExpression());
-					dictNode->addChild(new ParseTreeNode(consume(TokenType::Colon).lexeme));
-					dictNode->addChild(parseExpression());
-					while (currentToken().type == TokenType::Comma)
+					if (tokens[temp].type == TokenType::Colon)
 					{
-						dictNode->addChild(new ParseTreeNode(consume(TokenType::Comma).lexeme));
+						isDict = true;
+						break;
+					}
+					temp++;
+				}
+				if (isDict)
+				{
+					// dict
+					ParseTreeNode *dictNode = new ParseTreeNode("dict_literal");
+					dictNode->addChild(new ParseTreeNode(consume(TokenType::LeftBrace).lexeme));
+					if (currentToken().type != TokenType::RightBrace)
+					{
 						dictNode->addChild(parseExpression());
 						dictNode->addChild(new ParseTreeNode(consume(TokenType::Colon).lexeme));
 						dictNode->addChild(parseExpression());
+						while (currentToken().type == TokenType::Comma)
+						{
+							dictNode->addChild(new ParseTreeNode(consume(TokenType::Comma).lexeme));
+							dictNode->addChild(parseExpression());
+							dictNode->addChild(new ParseTreeNode(consume(TokenType::Colon).lexeme));
+							dictNode->addChild(parseExpression());
+						}
 					}
+					dictNode->addChild(new ParseTreeNode(consume(TokenType::RightBrace).lexeme));
+					factorNode->addChild(dictNode);
 				}
-				dictNode->addChild(new ParseTreeNode(consume(TokenType::RightBrace).lexeme));
-				factorNode->addChild(dictNode);
+				else
+				{
+					// set
+					ParseTreeNode *setNode = new ParseTreeNode("set_literal");
+					setNode->addChild(new ParseTreeNode(consume(TokenType::LeftBrace).lexeme));
+					if (currentToken().type != TokenType::RightBrace)
+					{
+						setNode->addChild(parseExpression());
+						while (currentToken().type == TokenType::Comma)
+						{
+							setNode->addChild(new ParseTreeNode(consume(TokenType::Comma).lexeme));
+							setNode->addChild(parseExpression());
+						}
+					}
+					setNode->addChild(new ParseTreeNode(consume(TokenType::RightBrace).lexeme));
+					factorNode->addChild(setNode);
+				}
 			}
 
-			else
-			{
+			else{
 				error("Could not parse Factor");
 				throw consumeError();
 			}

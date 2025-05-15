@@ -49,43 +49,43 @@ def myFunction(x, y=10):
     elif total < 100:
         return False
     else:
-        return None
+         return "Result is {}".format(total)
 wqt = 10
 
-def myFunction2(x, y=10):
-    x = 1
+# def myFunction2(x, y=10):
+#     x = 1
 
-def main():
-    """Main function docstring"""
-    obj = MyClass("Moh")
-    obj.greet()
-    result = myFunction(50, 20)
-    x  = math.sqrt(16) # This is a comment
-    x+= 1 # This is another comment
-    test = True
-    test2 = False
-    test3 = test | test2
-    # y = x << 2 # This is a bitwise left shift operation
-    # z = y >> 1 # This is a bitwise right shift operation
-    #q = ~y
-    r = 20.5
-    r**= 2.5
-    wqt = 5
-    wrt = 10
-    qq = wqt + wrt
-    aaa, bbb = 1, 2
-    num = 101
-    rrrr,sss="hey","hello"
-    www = rrrr + sss
-    tttttt = 4
-    rrrrrr = 5
-    unterminated_string = "This is an unterminated string"
-    unterminated_string_single = 'This is an unterminated string'
-    qqqqqq,pppppp = tttttt, rrrrrr
-    alpha,beta,gamma = 5,6,7
-    qwqwqw, rrr = [1, 2], [3, 4]
-    test10,test11= [1,4]
-    print("Hello World")
-    print(result)
-if __name__ == "__main__":
-    main()
+# def main():
+#     """Main function docstring"""
+#     obj = MyClass("Moh")
+#     obj.greet()
+#     result = myFunction(50, 20)
+#     x  = math.sqrt(16) # This is a comment
+#     x+= 1 # This is another comment
+#     test = True
+#     test2 = False
+#     test3 = test | test2
+#     # y = x << 2 # This is a bitwise left shift operation
+#     # z = y >> 1 # This is a bitwise right shift operation
+#     #q = ~y
+#     r = 20.5
+#     r**= 2.5
+#     wqt = 5
+#     wrt = 10
+#     qq = wqt + wrt
+#     aaa, bbb = 1, 2
+#     num = 101
+#     rrrr,sss="hey","hello"
+#     www = rrrr + sss
+#     tttttt = 4
+#     rrrrrr = 5
+#     unterminated_string = "This is an unterminated string"
+#     unterminated_string_single = 'This is an unterminated string'
+#     qqqqqq,pppppp = tttttt, rrrrrr
+#     alpha,beta,gamma = 5,6,7
+#     qwqwqw, rrr = [1, 2], [3, 4]
+#     test10,test11= [1,4]
+#     print("Hello World")
+#     print(result)
+# if __name__ == "__main__":
+#     main()

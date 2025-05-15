@@ -11,8 +11,11 @@ print("yes" if True else "no")
 print("yes") if False else print("no")
 y = 20
 y = 10 < (x if True else y)
+my_list = [1, 2, 3 if False else 4]
 car1 = Car("Honda")
 car1.printname()
+mySet = {4, 5, 6}
+
 
 class MyClass:
     # This is a class-level comment
