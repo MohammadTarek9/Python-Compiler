@@ -50,11 +50,11 @@ iterative_stmt → 'while' expression ':' block
 
 conditional_stmt → 'if' expression ':' block ('elif' expression ':' block)* ('else' ':' block)?
 
-function_call_stmt → dotted_name '(' arguments ')'
+function_call_stmt → dotted_name '(' arguments ')' ('if' or_expr 'else' function_call_stmt)?
 
 arguments → (expression (',' expression)*)?
 
-expression → or_expr
+expression → or_expr ('if' or_expr 'else' expression)?
 
 or_expr → and_expr ('or' and_expr)*
 and_expr → not_expr ('and' not_expr)*

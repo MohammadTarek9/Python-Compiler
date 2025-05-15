@@ -11,7 +11,7 @@ class MyClass:
 
     def greet(self):
         # Greet method
-        print(f"Hello")
+        print("hello" + self.name)
 
 def myFunction(x, y=10):
     """
@@ -33,7 +33,7 @@ def myFunction(x, y=10):
     mychar = 'a'
     for i in myList:
         print(i)
-    #print("hey") if x > 0 else print("hello")
+    mytst = 1 if True else 0
     mySet = {4, 5, 6}
     myDict = {7: "seven", 8: "eight", 9: "nine"}
     myTuple = (0, 1, 2)
@@ -52,6 +52,9 @@ def myFunction(x, y=10):
         return None
 wqt = 10
 
+def myFunction2(x, y=10):
+    x = 1
+
 def main():
     """Main function docstring"""
     obj = MyClass("Moh")
@@ -62,9 +65,9 @@ def main():
     test = True
     test2 = False
     test3 = test | test2
-    y = x << 2 # This is a bitwise left shift operation
-    z = y >> 1 # This is a bitwise right shift operation
-    q = ~y
+    # y = x << 2 # This is a bitwise left shift operation
+    # z = y >> 1 # This is a bitwise right shift operation
+    #q = ~y
     r = 20.5
     r**= 2.5
     wqt = 5

@@ -2020,6 +2020,14 @@ public:
 			}
 
 			callNode->addChild(new ParseTreeNode(consume(TokenType::RightParenthesis).lexeme));
+			
+			if (current < tokens.size() && currentToken().type == TokenType::IfKeyword)
+			{
+				callNode->addChild(new ParseTreeNode(consume(TokenType::IfKeyword).lexeme));
+				callNode->addChild(parseOrExpr());
+				callNode->addChild(new ParseTreeNode(consume(TokenType::ElseKeyword).lexeme));
+				callNode->addChild(parseFunctionCall());
+			}
 		}
 		catch (const consumeError &)
 		{
@@ -2035,6 +2043,15 @@ public:
 		try
 		{
 			exprNode->addChild(parseOrExpr());
+			
+			if (current < tokens.size() && currentToken().type == TokenType::IfKeyword)
+			{
+				exprNode->addChild(new ParseTreeNode(consume(TokenType::IfKeyword).lexeme));
+				exprNode->addChild(parseOrExpr());
+				exprNode->addChild(new ParseTreeNode(consume(TokenType::ElseKeyword).lexeme));
+				exprNode->addChild(parseExpression());
+			}
+			
 		}
 		catch (const consumeError &)
 		{
