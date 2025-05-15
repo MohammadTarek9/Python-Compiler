@@ -1298,7 +1298,7 @@ public:
 	Token &peekToken()
 	{
 		static Token dummy(TokenType::UNKNOWN, "", -1, "");
-    	return (current + 1 < tokens.size()) ? tokens[current + 1] : dummy;
+		return (current + 1 < tokens.size()) ? tokens[current + 1] : dummy;
 	}
 
 	ParseTreeNode *parseProgram()
@@ -1407,15 +1407,52 @@ public:
 			switch (currentToken().type)
 			{
 			case TokenType::IDENTIFIER:
-				if (peekToken().type == TokenType::LeftParenthesis || peekToken().type == TokenType::Dot)
+			{
+				// Look ahead to decide: dotted name or function call or assignment
+				Token next = peekToken();
+				if (next.type == TokenType::LeftParenthesis)
 				{
+					// Simple function call
 					stmtNode->addChild(parseFunctionCall());
+				}
+				else if (next.type == TokenType::Dot)
+				{
+					// Look further: after dotted name, is it '(' → function call, or '=' → assignment?
+					size_t temp = current;
+					ParseTreeNode *dotted = parseDottedName();
+					if (current < tokens.size())
+					{
+						if (currentToken().type == TokenType::LeftParenthesis)
+						{
+							// Reset and parse as function call
+							current = temp;
+							stmtNode->addChild(parseFunctionCall());
+						}
+						else if (currentToken().type == TokenType::OPERATOR && currentToken().lexeme == "=")
+						{
+							// Reset and parse as assignment
+							current = temp;
+							stmtNode->addChild(parseAssignmentStmt());
+						}
+						else
+						{
+							error("Expected '(' or '=' after dotted name");
+							throw consumeError();
+						}
+					}
+					else
+					{
+						error("Unexpected end after dotted name");
+						throw consumeError();
+					}
 				}
 				else
 				{
 					stmtNode->addChild(parseAssignmentStmt());
 				}
 				break;
+			}
+
 			case TokenType::WhileKeyword:
 				stmtNode->addChild(parseWhileStmt());
 				break;
@@ -1525,6 +1562,49 @@ public:
 			throw consumeError();
 		}
 		return continueNode;
+	}
+
+	ParseTreeNode *parseClassBlock()
+	{
+		ParseTreeNode *classBlockNode = new ParseTreeNode("class_block");
+		int prevLine = currentToken().lineNumber;
+
+		try
+		{
+			consume(TokenType::INDENT);
+			classBlockNode->addChild(new ParseTreeNode("INDENT"));
+
+			while (current < tokens.size() && currentToken().type != TokenType::DEDENT)
+			{
+				if (currentToken().type == TokenType::DefKeyword)
+				{
+					classBlockNode->addChild(parseFunction());
+				}
+				else
+				{
+					classBlockNode->addChild(parseAssignmentStmt());
+				}
+
+				// Prevent same-line statements
+				if (currentToken().lineNumber <= prevLine)
+				{
+					error("Class members must be on separate lines");
+					synchronize(currentToken().lineNumber);
+					continue;
+				}
+				prevLine = currentToken().lineNumber;
+			}
+
+			classBlockNode->addChild(new ParseTreeNode("DEDENT"));
+			consume(TokenType::DEDENT);
+		}
+		catch (const consumeError &)
+		{
+			error("Could not parse class block");
+			throw consumeError();
+		}
+
+		return classBlockNode;
 	}
 
 	ParseTreeNode *parseBlock()
@@ -1776,7 +1856,7 @@ public:
 			}
 
 			classNode->addChild(new ParseTreeNode(consume(TokenType::Colon).lexeme));
-			classNode->addChild(parseBlock());
+			classNode->addChild(parseClassBlock());
 		}
 		catch (const consumeError &)
 		{
@@ -1846,17 +1926,27 @@ public:
 		ParseTreeNode *assignNode = new ParseTreeNode("assignment");
 		try
 		{
-			// Parse LHS identifiers
+			// Parse LHS identifiers or dotted names
 			ParseTreeNode *lhs = new ParseTreeNode("lhs");
-			lhs->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
+
+			// Handle first identifier or dotted name
+			if (peekToken().type == TokenType::Dot)
+				lhs->addChild(parseDottedName());
+			else
+				lhs->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
+
+			// Support multiple identifiers: x, y = ...
 			while (current < tokens.size() && currentToken().type == TokenType::Comma)
 			{
 				lhs->addChild(new ParseTreeNode(consume(TokenType::Comma).lexeme));
-				lhs->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
+				if (peekToken().type == TokenType::Dot)
+					lhs->addChild(parseDottedName());
+				else
+					lhs->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
 			}
 			assignNode->addChild(lhs);
 
-			// Assign operator
+			// Assign operator (=, +=, etc.)
 			assignNode->addChild(parseAssignOp());
 
 			// Parse RHS expressions
@@ -2144,12 +2234,32 @@ public:
 			}
 			else if (currentToken().type == TokenType::IDENTIFIER)
 			{
-				factorNode->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
-				if (currentToken().type == TokenType::LeftParenthesis)
+				if (peekToken().type == TokenType::Dot)
 				{
-					factorNode->addChild(new ParseTreeNode(consume(TokenType::LeftParenthesis).lexeme));
-					factorNode->addChild(parseArguments());
-					factorNode->addChild(new ParseTreeNode(consume(TokenType::RightParenthesis).lexeme));
+					// Handle dotted_name (e.g., car1.printname or car1.printname())
+					factorNode->addChild(parseDottedName());
+
+					// Check for method call
+					if (currentToken().type == TokenType::LeftParenthesis)
+					{
+						factorNode->addChild(new ParseTreeNode(consume(TokenType::LeftParenthesis).lexeme));
+						if (currentToken().type != TokenType::RightParenthesis)
+							factorNode->addChild(parseArguments());
+						factorNode->addChild(new ParseTreeNode(consume(TokenType::RightParenthesis).lexeme));
+					}
+				}
+				else
+				{
+					// Simple identifier or function call
+					factorNode->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
+
+					if (currentToken().type == TokenType::LeftParenthesis)
+					{
+						factorNode->addChild(new ParseTreeNode(consume(TokenType::LeftParenthesis).lexeme));
+						if (currentToken().type != TokenType::RightParenthesis)
+							factorNode->addChild(parseArguments());
+						factorNode->addChild(new ParseTreeNode(consume(TokenType::RightParenthesis).lexeme));
+					}
 				}
 			}
 			else if (currentToken().type == TokenType::STRING_LITERAL)
@@ -2317,8 +2427,9 @@ void saveTreeToDot(ParseTreeNode *root, const string &filename)
 // ----------------------------------------------
 int main()
 {
-	try{
-		string sourceCode = readFile("script2.py");
+	try
+	{
+		string sourceCode = readFile("seif.py");
 
 		vector<Error> errors;
 		// 2. Lexical analysis: produce tokens
@@ -2528,13 +2639,12 @@ int main()
 		cout << "\n\n\n\n";
 		printParseTree(root);
 		saveTreeToDot(root, "tree.dot");
-	
 	}
 	catch (const exception &ex)
 	{
 		cerr << "Error: " << ex.what() << endl;
 		return 1;
 	}
-	
+
 	return 0;
 }
