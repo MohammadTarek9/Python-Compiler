@@ -2020,14 +2020,6 @@ public:
 			}
 
 			callNode->addChild(new ParseTreeNode(consume(TokenType::RightParenthesis).lexeme));
-			
-			if (current < tokens.size() && currentToken().type == TokenType::IfKeyword)
-			{
-				callNode->addChild(new ParseTreeNode(consume(TokenType::IfKeyword).lexeme));
-				callNode->addChild(parseOrExpr());
-				callNode->addChild(new ParseTreeNode(consume(TokenType::ElseKeyword).lexeme));
-				callNode->addChild(parseFunctionCall());
-			}
 		}
 		catch (const consumeError &)
 		{
@@ -2043,15 +2035,6 @@ public:
 		try
 		{
 			exprNode->addChild(parseOrExpr());
-			
-			if (current < tokens.size() && currentToken().type == TokenType::IfKeyword)
-			{
-				exprNode->addChild(new ParseTreeNode(consume(TokenType::IfKeyword).lexeme));
-				exprNode->addChild(parseOrExpr());
-				exprNode->addChild(new ParseTreeNode(consume(TokenType::ElseKeyword).lexeme));
-				exprNode->addChild(parseExpression());
-			}
-			
 		}
 		catch (const consumeError &)
 		{
@@ -2312,6 +2295,10 @@ public:
 			{
 				factorNode->addChild(new ParseTreeNode(consume(TokenType::TrueKeyword).lexeme));
 			}
+			else if (currentToken().type == TokenType::NoneKeyword)
+			{
+				factorNode->addChild(new ParseTreeNode(consume(TokenType::NoneKeyword).lexeme));
+			}
 			else if (currentToken().type == TokenType::LeftBracket)
 			{
 				// list
@@ -2384,7 +2371,8 @@ public:
 				}
 			}
 
-			else{
+			else
+			{
 				error("Could not parse Factor");
 				throw consumeError();
 			}
@@ -2478,7 +2466,7 @@ int main()
 {
 	try
 	{
-		string sourceCode = readFile("seif.py");
+		string sourceCode = readFile("script.py");
 
 		vector<Error> errors;
 		// 2. Lexical analysis: produce tokens

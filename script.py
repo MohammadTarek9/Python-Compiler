@@ -33,7 +33,6 @@ def myFunction(x, y=10):
     mychar = 'a'
     for i in myList:
         print(i)
-    mytst = 1 if True else 0
     mySet = {4, 5, 6}
     myDict = {7: "seven", 8: "eight", 9: "nine"}
     myTuple = (0, 1, 2)
@@ -49,7 +48,7 @@ def myFunction(x, y=10):
     elif total < 100:
         return False
     else:
-         return "Result is {}".format(total)
+         return None
 wqt = 10
 
 # def myFunction2(x, y=10):
