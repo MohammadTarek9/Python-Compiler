@@ -54,7 +54,6 @@ enum class TokenType
 	NUMBER,
 	OPERATOR,
 	STRING_LITERAL,
-	COMMENT,
 	UNKNOWN,
 	LeftParenthesis,
 	RightParenthesis,
@@ -1212,7 +1211,6 @@ std::string tokenTypeToString(TokenType type)
 		{TokenType::IDENTIFIER, "identifier"},
 		{TokenType::NUMBER, "number"},
 		{TokenType::STRING_LITERAL, "string literal"},
-		{TokenType::COMMENT, "comment"},
 		{TokenType::UNKNOWN, "unknown"},
 
 		// Operators and punctuation
@@ -1268,6 +1266,14 @@ public:
 	{
 		cerr << "Syntax Error at line " << currentToken().lineNumber
 			 << ": " << message << endl;
+		// Also write to a file
+		std::ofstream out("syntax_errors.txt", std::ios::app);
+		if (out.is_open())
+		{
+			out << "Syntax Error at line " << currentToken().lineNumber
+				<< ": " << message << std::endl;
+			out.close();
+		}
 	}
 
 	Token consume(TokenType expected)
@@ -1986,6 +1992,7 @@ public:
 				{
 					assignOpNode->addChild(new ParseTreeNode(consume(TokenType::OPERATOR).lexeme));
 				}
+
 			}
 			else
 				throw consumeError();
@@ -2137,7 +2144,10 @@ public:
 			currentToken().lexeme == ">=" ||
 			currentToken().lexeme == "<=" ||
 			currentToken().lexeme == "&" ||
-			currentToken().lexeme == "|")
+			currentToken().lexeme == "^" ||
+			currentToken().lexeme == "|" || 
+			currentToken().lexeme == "<<" ||
+			 currentToken().lexeme == ">>")
 
 		{
 			try
@@ -2371,6 +2381,12 @@ public:
 				}
 			}
 
+			else if (currentToken().lexeme == "+" || currentToken().lexeme == "-" || currentToken().lexeme == "~" || currentToken().type == TokenType::NotKeyword)
+			{
+				factorNode->addChild(new ParseTreeNode(consume(currentToken().type).lexeme));
+				factorNode->addChild(parseFactor());
+			}
+			
 			else
 			{
 				error("Could not parse Factor");
@@ -2424,9 +2440,17 @@ void exportToDot(ParseTreeNode *node, ofstream &out, int &nodeId, int parentId =
 {
 	int currentId = nodeId++;
 
-	// Escape double quotes in the label
+	// Escape backslashes and double quotes in the label for DOT format
 	std::string safeLabel = node->label;
 	size_t pos = 0;
+	// First escape backslashes
+	while ((pos = safeLabel.find('\\', pos)) != std::string::npos)
+	{
+		safeLabel.replace(pos, 1, "\\\\");
+		pos += 2; // move past the escaped backslash
+	}
+	pos = 0;
+	// Then escape double quotes
 	while ((pos = safeLabel.find('"', pos)) != std::string::npos)
 	{
 		safeLabel.replace(pos, 1, "\\\"");

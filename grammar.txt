@@ -45,10 +45,10 @@ class_def → 'class' IDENTIFIER ('(' IDENTIFIER ')')? ':' class_block
 class_block → NEWLINE INDENT class_member+ DEDENT
 class_member → function | assignment_stmt
 
-iterative_stmt → 'while' expression ':' block
-               | 'for' IDENTIFIER 'in' expression ':' block
+iterative_stmt → 'while' (not)? expression ':' block
+               | 'for' IDENTIFIER (not)? 'in' expression ':' block
 
-conditional_stmt → 'if' expression ':' block ('elif' expression ':' block)* ('else' ':' block)?
+conditional_stmt → 'if' (not)? expression ':' block ('elif' (not)? expression ':' block)* ('else' ':' block)?
 
 function_call_stmt → dotted_name '(' arguments ')'
 
@@ -80,8 +80,10 @@ factor → INTEGER
        | '(' expression ')'
        | dotted_name '(' arguments ')'  // method call
        | IDENTIFIER '(' arguments ')'   // function call
+       | unary_op factor
 
 dotted_name → IDENTIFIER ('.' IDENTIFIER)*
+unary_op → '+' | '-' | '~' | 'not'
 
 list_literal → '[' (expression (',' expression)*)? ']'
 tuple_literal → '(' (expression (',' expression)+) ')'
