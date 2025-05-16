@@ -1817,9 +1817,12 @@ public:
 			tryNode->addChild(new ParseTreeNode(consume(TokenType::TryKeyword).lexeme));
 			tryNode->addChild(new ParseTreeNode(consume(TokenType::Colon).lexeme));
 			tryNode->addChild(parseBlock());
+			bool hasExcept = false; 
+			bool hasFinally = false;
 
 			while (current < tokens.size() && currentToken().type == TokenType::ExceptKeyword)
 			{
+				hasExcept = true;
 				auto *exceptNode = new ParseTreeNode("except_clause");
 				exceptNode->addChild(new ParseTreeNode(consume(TokenType::ExceptKeyword).lexeme));
 				if (current < tokens.size() && currentToken().type == TokenType::IDENTIFIER)
@@ -1834,24 +1837,31 @@ public:
 				exceptNode->addChild(new ParseTreeNode(consume(TokenType::Colon).lexeme));
 				exceptNode->addChild(parseBlock());
 				tryNode->addChild(exceptNode);
-			}
-
-			if (current < tokens.size() && currentToken().type == TokenType::ElseKeyword)
-			{
-				auto *elseNode = new ParseTreeNode("else_clause");
-				elseNode->addChild(new ParseTreeNode(consume(TokenType::ElseKeyword).lexeme));
-				elseNode->addChild(new ParseTreeNode(consume(TokenType::Colon).lexeme));
-				elseNode->addChild(parseBlock());
-				tryNode->addChild(elseNode);
+				
+				if (current < tokens.size() && currentToken().type == TokenType::ElseKeyword)
+				{
+					auto *elseNode = new ParseTreeNode("else_clause");
+					elseNode->addChild(new ParseTreeNode(consume(TokenType::ElseKeyword).lexeme));
+					elseNode->addChild(new ParseTreeNode(consume(TokenType::Colon).lexeme));
+					elseNode->addChild(parseBlock());
+					tryNode->addChild(elseNode);
+				}
 			}
 
 			if (current < tokens.size() && currentToken().type == TokenType::FinallyKeyword)
 			{
+				hasFinally = true;
 				auto *finallyNode = new ParseTreeNode("finally_clause");
 				finallyNode->addChild(new ParseTreeNode(consume(TokenType::FinallyKeyword).lexeme));
 				finallyNode->addChild(new ParseTreeNode(consume(TokenType::Colon).lexeme));
 				finallyNode->addChild(parseBlock());
 				tryNode->addChild(finallyNode);
+			}
+
+			if (!hasExcept && !hasFinally)
+			{
+				error("Try statement must have at least one except or finally clause");
+				throw consumeError();
 			}
 		}
 		catch (const consumeError &)
@@ -2535,7 +2545,7 @@ int main()
 {
 	try
 	{
-		string sourceCode = readFile("seif.py");
+		string sourceCode = readFile("script.py");
 
 		vector<Error> errors;
 		// 2. Lexical analysis: produce tokens

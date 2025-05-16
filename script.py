@@ -37,7 +37,8 @@ def myFunction(x, y=10):
     myDict = {7: "seven", 8: "eight", 9: "nine"}
     myTuple = (0, 1, 2)
     myTuple2 = (12+14) # not handled as a tuple
-    myTuple3 = (12) # handled as a tuple
+    expr3 = () 
+    print(type(expr3))
     #wrong_tuple = (12, 14
     names = ["hey", "hello", "hi"]
     newSet = {":", ":(", ":D"} # should be a set not a dictionary
@@ -54,6 +55,14 @@ wqt = 10
 def myFunction2(x, y=10):
     x = 1
 
+try:
+    # This is a try block
+    result = myFunction(5, 10)
+except Exception as e:
+    # This is an exception block
+    print("An error occurred:", e)
+
+
 def main():
     """Main function docstring"""
     obj = MyClass("Moh")
@@ -64,9 +73,9 @@ def main():
     test = True
     test2 = False
     test3 = test | test2
-    y = x << 2 # This is a bitwise left shift operation
-    z = y >> 1 # This is a bitwise right shift operation
-    q = ~y
+    # y = x << 2 # This is a bitwise left shift operation
+    # z = y >> 1 # This is a bitwise right shift operation
+    # q = ~y
     seif = -1
     r = 20.5
     r**= 2.5

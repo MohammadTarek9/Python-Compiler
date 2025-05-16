@@ -1,10 +1,14 @@
-program → (statement)*
+program → statements
+statements → statement statements | ε
 
 function → 'def' IDENTIFIER '(' parameters ')' ':' block
-parameters → (parameter (',' parameter)*)?
-parameter → IDENTIFIER ('=' expression)?
+parameters → parameter_list | ε
+parameter_list → parameter additional_parameters
+additional_parameters → ',' parameter additional_parameters | ε
+parameter → IDENTIFIER optional_default
+optional_default → '=' expression | ε
 
-block → NEWLINE INDENT statement+ DEDENT
+block → NEWLINE INDENT statements DEDENT | statement
 
 statement → assignment_stmt
           | return_stmt
@@ -18,60 +22,85 @@ statement → assignment_stmt
           | raise_stmt
           | try_stmt
           | class_def
-		  | function
+          | function
 
 assignment_stmt → identifier_list ASSIGN_OP expression_list
-identifier_list → (IDENTIFIER | dotted_name) (',' (IDENTIFIER | dotted_name))*
-expression_list → expression (',' expression)*
+identifier_list → IDENTIFIER_or_dotted additional_identifiers
+additional_identifiers → ',' IDENTIFIER_or_dotted additional_identifiers | ε
+IDENTIFIER_or_dotted → IDENTIFIER | dotted_name
+expression_list → expression additional_expressions
+additional_expressions → ',' expression additional_expressions | ε
 
 ASSIGN_OP → '=' | '+=' | '-=' | '*=' | '/=' | '%=' | '//=' | '**='
 
-return_stmt → 'return' expression?
+return_stmt → 'return' optional_expression
+optional_expression → expression | ε
 pass_stmt → 'pass'
 break_stmt → 'break'
 continue_stmt → 'continue'
 
-import_stmt → 'import' dotted_name ('as' IDENTIFIER)? (',' dotted_name ('as' IDENTIFIER)?)* 
-            | 'from' dotted_name 'import' (IDENTIFIER ('as' IDENTIFIER)? | '*')
+import_stmt → 'import' dotted_name import_as import_continuation 
+             | 'from' dotted_name 'import' import_items
+
+import_as → 'as' IDENTIFIER | ε 
+import_continuation → ',' dotted_name import_as import_continuation | ε
+
+import_items → IDENTIFIER item_as import_items_continuation | '*'
+item_as → 'as' IDENTIFIER | ε
+import_items_continuation → ',' IDENTIFIER item_as import_items_continuation | ε
 
 raise_stmt → 'raise' expression
 
-try_stmt → 'try' ':' block
-         ('except' (IDENTIFIER ('as' IDENTIFIER)? )? ':' block)+
-         ('else' ':' block)?
-         ('finally' ':' block)?
+try_stmt → 'try' ':' block (except_clauses optional_else optional_finally | finally_clause)
+except_clauses → except_clause except_clauses | except_clause
+except_clause → 'except' optional_exception ':' block
+optional_exception → IDENTIFIER optional_as_ident | ε
+optional_as_ident → 'as' IDENTIFIER | ε
+optional_else → 'else' ':' block | ε
+optional_finally → 'finally' ':' block | ε
 
-class_def → 'class' IDENTIFIER ('(' IDENTIFIER ')')? ':' class_block
+class_def → 'class' IDENTIFIER optional_parent ':' class_block
+optional_parent → '(' IDENTIFIER ')' | ε
 
-class_block → NEWLINE INDENT class_member+ DEDENT
+class_block → NEWLINE INDENT class_members DEDENT
+class_members → class_member additional_members
+additional_members → class_member additional_members | ε  
 class_member → function | assignment_stmt
 
 iterative_stmt → 'while' expression ':' block
                | 'for' IDENTIFIER 'in' expression ':' block
 
-conditional_stmt → 'if' expression ':' block ('elif' expression ':' block)* ('else' ':' block)?
+conditional_stmt → 'if' expression ':' block elif_parts optional_else
+elif_parts → elif_part elif_parts | ε
+elif_part → 'elif' expression ':' block
+optional_else → 'else' ':' block | ε
 
 function_call_stmt → dotted_name '(' arguments ')'
-
-arguments → (expression (',' expression)*)?
+arguments → expression_list | ε
 
 expression → or_expr
-
-or_expr → and_expr ('or' and_expr)*
-and_expr → not_expr ('and' not_expr)*
+or_expr → and_expr or_tail
+or_tail → 'or' and_expr or_tail | ε
+and_expr → not_expr and_tail
+and_tail → 'and' not_expr and_tail | ε
 not_expr → 'not' not_expr | comparison
-comparison → arithmetic_expr (OP arithmetic_expr)*
+comparison → arithmetic_expr op_comparison
+op_comparison → OP arithmetic_expr op_comparison | ε
 
 OP → '==' | '!=' | '<' | '>' | '>=' | '<=' | 'in' | 'not in' | 'is' | 'is not'
 
-arithmetic_expr → term (('+' | '-') term)*
-term → factor (('*' | '/' | '%') factor)*
+arithmetic_expr → term arithmetic_tail
+arithmetic_tail → add_op term arithmetic_tail | ε
+add_op → '+' | '-'
+term → factor term_tail
+term_tail → mul_op factor term_tail | ε
+mul_op → '*' | '/' | '%'
 
 factor → INTEGER
        | FLOAT
        | STRING_LITERAL
-       | True
-       | False
+       | 'True'
+       | 'False'
        | IDENTIFIER
        | dotted_name
        | list_literal
@@ -79,14 +108,29 @@ factor → INTEGER
        | dict_literal
        | set_literal
        | '(' expression ')'
-       | dotted_name '(' arguments ')'  // method call
-       | IDENTIFIER '(' arguments ')'   // function call
+       | dotted_name '(' arguments ')'
+       | IDENTIFIER '(' arguments ')'
        | unary_op factor
 
-dotted_name → IDENTIFIER ('.' IDENTIFIER)*
+dotted_name → IDENTIFIER dotted_tail
+dotted_tail → '.' IDENTIFIER dotted_tail | ε
 unary_op → '+' | '-' | '~' | 'not'
 
-list_literal → '[' (expression (',' expression)*)? ']'
-tuple_literal → '(' (expression (',' expression)+) ')'
-dict_literal → '{' (expression ':' expression (',' expression ':' expression)*)? '}'
-set_literal → '{' expression (',' expression)* '}'
+list_literal → '[' list_items ']'
+list_items → expression_list | ε
+tuple_literal → '(' tuple_items ')'
+
+# Cases:
+# 1. Empty: ()
+# 2. Single element: (x,)
+# 3. Multiple elements: (x, y) or (x, y, z)
+tuple_items → ε                      
+    | expression ','         
+    | expression ',' expression additional_expressions 
+dict_literal → '{' dict_items '}'
+dict_items → dict_pair additional_dict_pairs | ε
+dict_pair → expression ':' expression
+additional_dict_pairs → ',' dict_pair additional_dict_pairs | ε
+set_literal → '{' set_items '}'
+set_items → expression additional_expressions
+additional_expressions → ',' expression additional_expressions | ε
