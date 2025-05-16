@@ -81,7 +81,7 @@ struct Token
 
 	Token() {};
 
-	Token(TokenType t, const string &l, int line, const string &s = "")
+	Token(TokenType t, const string& l, int line, const string& s = "")
 		: type(t), lexeme(l), lineNumber(line), scope(s) {}
 };
 
@@ -97,12 +97,12 @@ struct Error
 	void print() const
 	{
 		cerr << "Error at line " << line << ", position " << position
-			 << ": " << message << endl;
+			<< ": " << message << endl;
 	}
 };
 
 // printing errors
-void printErrors(const vector<Error> &errors)
+void printErrors(const vector<Error>& errors)
 {
 	if (errors.empty())
 	{
@@ -111,7 +111,7 @@ void printErrors(const vector<Error> &errors)
 	}
 
 	cerr << "\nTokenization errors (" << errors.size() << "):" << endl;
-	for (const auto &error : errors)
+	for (const auto& error : errors)
 	{
 		error.print();
 	}
@@ -162,9 +162,9 @@ public:
 	unordered_map<string, SymbolInfo> table;
 	int nextEntry = 1;
 
-	void addSymbol(const string &name, const string &type,
-				   int lineNumber, const string &scope,
-				   const string &val = "")
+	void addSymbol(const string& name, const string& type,
+		int lineNumber, const string& scope,
+		const string& val = "")
 	{
 		string uniqueKey = name + "@" + scope;
 
@@ -195,7 +195,7 @@ public:
 	}
 
 	// Allows updating a symbol's type after creation.
-	void updateType(const string &name, const string &scope, const string &newType)
+	void updateType(const string& name, const string& scope, const string& newType)
 	{
 		string key = name + "@" + scope;
 		if (table.find(key) != table.end())
@@ -205,7 +205,7 @@ public:
 	}
 
 	// Allows updating a symbol's literal value after creation.
-	void updateValue(const string &name, const string &scope, const string &newValue)
+	void updateValue(const string& name, const string& scope, const string& newValue)
 	{
 		string key = name + "@" + scope;
 		if (table.find(key) != table.end())
@@ -215,18 +215,18 @@ public:
 	}
 
 	// Retrieve the type of a symbol if it exists
-	bool exist(const string &name, const string &scope)
+	bool exist(const string& name, const string& scope)
 	{
 		return table.find(name + "@" + scope) != table.end();
 	}
 
-	string getType(const string &name, const string &scope)
+	string getType(const string& name, const string& scope)
 	{
 		auto it = table.find(name + "@" + scope);
 		return it != table.end() ? it->second.type : "unknown";
 	}
 
-	string getValue(const string &name, const string &scope)
+	string getValue(const string& name, const string& scope)
 	{
 		auto it = table.find(name + "@" + scope);
 		return it != table.end() ? it->second.value : "";
@@ -239,22 +239,22 @@ public:
 		// Create a vector of pairs to sort by entry
 		vector<pair<string, SymbolInfo>> sortedSymbols(table.begin(), table.end());
 		sort(sortedSymbols.begin(), sortedSymbols.end(),
-			 [](const pair<string, SymbolInfo> &a, const pair<string, SymbolInfo> &b)
-			 {
-				 return a.second.entry < b.second.entry;
-			 });
+			[](const pair<string, SymbolInfo>& a, const pair<string, SymbolInfo>& b)
+			{
+				return a.second.entry < b.second.entry;
+			});
 
-		for (auto &[key, info] : sortedSymbols)
+		for (auto& [key, info] : sortedSymbols)
 		{
 			auto at = key.find('@');
 			string name = key.substr(0, at);
 			string scope = key.substr(at + 1);
 			cout << "Entry: " << info.entry
-				 << ", Name: " << name
-				 << ", Scope: " << scope
-				 << ", Type: " << info.type
-				 << ", First Appearance: Line " << info.firstAppearance
-				 << ", Usage Count: " << info.usageCount;
+				<< ", Name: " << name
+				<< ", Scope: " << scope
+				<< ", Type: " << info.type
+				<< ", First Appearance: Line " << info.firstAppearance
+				<< ", Usage Count: " << info.usageCount;
 			if (!info.value.empty())
 				cout << ", Value: " << info.value;
 			cout << "\n";
@@ -303,12 +303,12 @@ public:
 		{"try", TokenType::TryKeyword},
 		{"while", TokenType::WhileKeyword},
 		{"with", TokenType::WithKeyword},
-		{"yield", TokenType::YieldKeyword}};
+		{"yield", TokenType::YieldKeyword} };
 
 	// Some common single/multi/triple-character operators
 	unordered_set<string> operators = {
 		"+", "-", "*", "/", "%", "//", "**", "=", "==", "!=", "<", "<=", ">",
-		">=", "+=", "-=", "*=", "/=", "%=", "//=", "**=", "|", "&", "^", "~", "<<", ">>"};
+		">=", "+=", "-=", "*=", "/=", "%=", "//=", "**=", "|", "&", "^", "~", "<<", ">>" };
 
 	// Common delimiters
 	unordered_map<char, TokenType> punctuationSymbols = {
@@ -321,17 +321,17 @@ public:
 		{']', TokenType::RightBracket},
 		{'{', TokenType::LeftBrace},
 		{'}', TokenType::RightBrace},
-		{';', TokenType::Semicolon}};
+		{';', TokenType::Semicolon} };
 
 	vector<ScopeInfo> scopeStack;
 
 	// The tokenize() function produces tokens without modifying the symbol table.
-	vector<Token> tokenize(const string &source, vector<Error> &errors)
+	vector<Token> tokenize(const string& source, vector<Error>& errors)
 	{
 		vector<Token> tokens;
 		int lineNumber = 1;
 		size_t i = 0;
-		indentStack = {0}; // Reset state
+		indentStack = { 0 }; // Reset state
 		atLineStart = true;
 		lineContinuation = false;
 
@@ -395,9 +395,9 @@ public:
 					continue;
 				}
 			}
-			catch (const UnterminatedStringError &e)
+			catch (const UnterminatedStringError& e)
 			{
-				errors.push_back({"Unterminated triple-quoted string", e.line_number, e.index});
+				errors.push_back({ "Unterminated triple-quoted string", e.line_number, e.index });
 				continue;
 			}
 
@@ -406,7 +406,7 @@ public:
 			{
 				size_t start = i;
 				while (i < source.size() &&
-					   (isalnum(static_cast<unsigned char>(source[i])) || source[i] == '_'))
+					(isalnum(static_cast<unsigned char>(source[i])) || source[i] == '_'))
 				{
 					i++;
 				}
@@ -426,7 +426,7 @@ public:
 						if (identifierStart < i)
 						{
 							string identifier = source.substr(identifierStart, i - identifierStart);
-							scopeStack.push_back({identifier, indentStack.back()});
+							scopeStack.push_back({ identifier, indentStack.back() });
 							// cout<<"Current scope: " << scopeStack << endl;
 							tokens.push_back(Token(TokenType::IDENTIFIER, identifier, lineNumber, getScope(scopeStack)));
 						}
@@ -486,9 +486,9 @@ public:
 						str,
 						lineNumber));
 				}
-				catch (const UnterminatedStringError &e)
+				catch (const UnterminatedStringError& e)
 				{
-					errors.push_back({"Unterminated string literal", e.line_number, e.index});
+					errors.push_back({ "Unterminated string literal", e.line_number, e.index });
 				}
 				continue;
 			}
@@ -509,7 +509,7 @@ public:
 				string num = source.substr(start, i - start);
 				if (num[0] == '0' && std::stoi(num) != 0 && !hasDot)
 				{
-					errors.push_back({"leading zeros in decimal integer literals are not permitted", lineNumber, start});
+					errors.push_back({ "leading zeros in decimal integer literals are not permitted", lineNumber, start });
 					continue;
 				}
 				tokens.push_back(Token(TokenType::NUMBER, num, lineNumber));
@@ -525,7 +525,7 @@ public:
 			}
 
 			// Unknown character - add error but keep going
-			errors.push_back({"Invalid character '" + string(1, c) + "'", lineNumber, i});
+			errors.push_back({ "Invalid character '" + string(1, c) + "'", lineNumber, i });
 			i++;
 			atLineStart = false;
 		}
@@ -541,11 +541,11 @@ public:
 	}
 
 private:
-	vector<int> indentStack = {0}; // Track indentation levels (e.g., [0, 4, 8])
+	vector<int> indentStack = { 0 }; // Track indentation levels (e.g., [0, 4, 8])
 	bool atLineStart = true;	   // Flag for newline handling
 	bool lineContinuation = false; // Track line continuation via '\'
 
-	void skipNonLeadingWhitespace(const string &source, size_t &idx)
+	void skipNonLeadingWhitespace(const string& source, size_t& idx)
 	{
 		static const regex ws_regex(R"(^[ \t\r]+)");
 		smatch match;
@@ -560,7 +560,7 @@ private:
 		}
 	}
 
-	string handleTripleQuotedString(const string &source, size_t &idx, int &lineNumber)
+	string handleTripleQuotedString(const string& source, size_t& idx, int& lineNumber)
 	{
 		int start_line = lineNumber;
 		if (idx + 2 < source.size())
@@ -612,7 +612,7 @@ private:
 		return regex_match(string(1, c), operatorRegex);
 	}
 
-	string handleDoubleQuotedString(const string &source, size_t &idx, int &lineNumber)
+	string handleDoubleQuotedString(const string& source, size_t& idx, int& lineNumber)
 	{
 		int start_line = lineNumber;
 		if (idx < source.size())
@@ -644,8 +644,8 @@ private:
 		throw UnterminatedStringError(start_line, idx);
 	}
 
-	void processIndentation(const string &source, size_t &i, int lineNumber,
-							vector<Token> &tokens, vector<Error> &errors)
+	void processIndentation(const string& source, size_t& i, int lineNumber,
+		vector<Token>& tokens, vector<Error>& errors)
 	{
 		size_t start = i;
 		int spaces = 0, tabs = 0;
@@ -663,7 +663,7 @@ private:
 		// Error: Mixed tabs and spaces
 		if (spaces > 0 && tabs > 0)
 		{
-			errors.push_back({"Mixed tabs and spaces in indentation", lineNumber, start});
+			errors.push_back({ "Mixed tabs and spaces in indentation", lineNumber, start });
 		}
 		if (source[i] == '\n')
 		{
@@ -692,7 +692,7 @@ private:
 				}
 				if (indentStack.empty())
 				{
-					errors.push_back({"Dedent exceeds indentation level", lineNumber, start});
+					errors.push_back({ "Dedent exceeds indentation level", lineNumber, start });
 					indentStack.push_back(0); // Recover
 					break;
 				}
@@ -700,13 +700,13 @@ private:
 			// Error: No matching indentation level
 			if (indentStack.back() != newIndent)
 			{
-				errors.push_back({"Unindent does not match outer level", lineNumber, start});
+				errors.push_back({ "Unindent does not match outer level", lineNumber, start });
 			}
 		}
 		// Equal indentation: Do nothing
 	}
 
-	string getScope(const vector<ScopeInfo> &scopeStack)
+	string getScope(const vector<ScopeInfo>& scopeStack)
 	{
 		if (scopeStack.empty())
 		{
@@ -735,7 +735,7 @@ private:
 class Parser
 {
 public:
-	Parser(const vector<Token> &tokens, SymbolTable &symTable)
+	Parser(const vector<Token>& tokens, SymbolTable& symTable)
 		: tokens(tokens), symbolTable(symTable) {}
 
 	void parse()
@@ -743,7 +743,7 @@ public:
 		size_t i = 0;
 		while (i < tokens.size())
 		{
-			const Token &tk = tokens[i];
+			const Token& tk = tokens[i];
 
 			if (tk.type == TokenType::DefKeyword || tk.type == TokenType::ClassKeyword)
 			{
@@ -798,7 +798,7 @@ public:
 						while (temp < tokens.size())
 						{
 							auto [type, value] = parseExpression(temp);
-							rhsValues.push_back({type, value});
+							rhsValues.push_back({ type, value });
 							if (temp < tokens.size() && tokens[temp].type == TokenType::Comma)
 							{
 								temp++;
@@ -811,7 +811,7 @@ public:
 
 						for (size_t j = 0; j < lhsIdentifiers.size(); ++j)
 						{
-							const Token &var = lhsIdentifiers[j];
+							const Token& var = lhsIdentifiers[j];
 							string key = var.lexeme + "@" + var.scope;
 							if (!symbolTable.exist(var.lexeme, var.scope))
 							{
@@ -842,7 +842,7 @@ public:
 						tokens[i + 1].lexeme == "=")
 					{
 						// We have "identifier = ..."
-						const string &lhsName = tk.lexeme;
+						const string& lhsName = tk.lexeme;
 						int lineNumber = tk.lineNumber;
 						// Add symbol if not exist
 						string fullName = lhsName + "@" + tk.scope;
@@ -894,8 +894,8 @@ public:
 
 private:
 private:
-	const vector<Token> &tokens;
-	SymbolTable &symbolTable;
+	const vector<Token>& tokens;
+	SymbolTable& symbolTable;
 	string lastKeyword;
 
 	// ------------------------------------------------------
@@ -907,7 +907,7 @@ private:
 	// We'll return the final type and a single literal value only
 	// if the entire expression is a single literal. Otherwise, "".
 	// ------------------------------------------------------
-	pair<string, string> parseExpression(size_t &i)
+	pair<string, string> parseExpression(size_t& i)
 	{
 		// Parse the first operand
 		auto [accumType, accumValue] = parseOperand(i);
@@ -933,7 +933,7 @@ private:
 				break;
 			}
 		}
-		return {accumType, accumValue};
+		return { accumType, accumValue };
 	}
 
 	// ------------------------------------------------------
@@ -943,14 +943,14 @@ private:
 	// This re-uses the same logic from a simplified version
 	// of "inferTypeOfRHS" but for a single operand only.
 	// ------------------------------------------------------
-	pair<string, string> parseOperand(size_t &i)
+	pair<string, string> parseOperand(size_t& i)
 	{
 		if (i >= tokens.size())
 		{
-			return {"unknown", ""};
+			return { "unknown", "" };
 		}
 
-		const Token &tk = tokens[i];
+		const Token& tk = tokens[i];
 
 		// If it's a numeric literal
 		if (tk.type == TokenType::NUMBER)
@@ -959,12 +959,12 @@ private:
 			if (tk.lexeme.find('.') != string::npos)
 			{
 				i++;
-				return {"float", tk.lexeme};
+				return { "float", tk.lexeme };
 			}
 			else
 			{
 				i++;
-				return {"int", tk.lexeme};
+				return { "int", tk.lexeme };
 			}
 		}
 
@@ -972,7 +972,7 @@ private:
 		if (tk.type == TokenType::STRING_LITERAL)
 		{
 			i++;
-			return {"string", tk.lexeme};
+			return { "string", tk.lexeme };
 		}
 
 		// If it's a keyword => might be True/False
@@ -981,10 +981,10 @@ private:
 			if (tk.lexeme == "True" || tk.lexeme == "False")
 			{
 				i++;
-				return {"bool", tk.lexeme};
+				return { "bool", tk.lexeme };
 			}
 			i++;
-			return {"unknown", ""};
+			return { "unknown", "" };
 		}
 
 		// If it's an identifier
@@ -1003,7 +1003,7 @@ private:
 				symbolTable.table[fullName].usageCount++;
 			}
 			i++;
-			return {knownType, knownType == "unknown" ? "" : knownValue};
+			return { knownType, knownType == "unknown" ? "" : knownValue };
 		}
 
 		// if it's a tuple
@@ -1039,18 +1039,18 @@ private:
 				if (elementTypes.size() == 1)
 				{
 					// Single element in parentheses, treat as the element itself
-					return {elementTypes[0], value};
+					return { elementTypes[0], value };
 				}
 				else
 				{
 					// Multiple elements, treat as a tuple
-					return {"tuple", value};
+					return { "tuple", value };
 				}
 			}
 			else
 			{
 				// If no closing parenthesis, return unknown
-				return {"unknown", value};
+				return { "unknown", value };
 			}
 		}
 
@@ -1069,7 +1069,7 @@ private:
 				i++;
 			}
 			value = value + "]";
-			return {"list", value};
+			return { "list", value };
 		}
 
 		// if it's a dictionary or set
@@ -1092,12 +1092,12 @@ private:
 				i++;
 			}
 			value = value + "}";
-			return {isSet ? "set" : "dictionary", value};
+			return { isSet ? "set" : "dictionary", value };
 		}
 
 		// Otherwise unknown
 		i++;
-		return {"unknown", ""};
+		return { "unknown", "" };
 	}
 
 	// ------------------------------------------------------
@@ -1109,7 +1109,7 @@ private:
 	// - if there's a conflict (e.g., "string" + "int"), => "unknown"
 	// Expand this if you want to handle more complex rules
 	// ------------------------------------------------------
-	string unifyTypes(const string &t1, const string &t2)
+	string unifyTypes(const string& t1, const string& t2)
 	{
 		if (t1 == "unknown" && t2 == "unknown")
 			return "unknown";
@@ -1228,7 +1228,7 @@ std::string tokenTypeToString(TokenType type)
 
 		// Indentation
 		{TokenType::INDENT, "indent"},
-		{TokenType::DEDENT, "dedent"}};
+		{TokenType::DEDENT, "dedent"} };
 
 	auto it = typeStrings.find(type);
 	if (it != typeStrings.end())
@@ -1242,11 +1242,11 @@ class ParseTreeNode
 {
 public:
 	string label;
-	vector<ParseTreeNode *> children;
+	vector<ParseTreeNode*> children;
 	Token token; // For leaf nodes
 
 	ParseTreeNode(string lbl) : label(lbl) {}
-	void addChild(ParseTreeNode *child)
+	void addChild(ParseTreeNode* child)
 	{
 		children.push_back(child);
 	}
@@ -1262,10 +1262,14 @@ private:
 public:
 	vector<Token> tokens;
 
-	void error(const string &message)
+	void error(const string& message)
 	{
+		if (current >= tokens.size())
+		{
+			current = tokens.size() - 1;
+		}
 		cerr << "Syntax Error at line " << currentToken().lineNumber
-			 << ": " << message << endl;
+			<< ": " << message << endl;
 		// Also write to a file
 		std::ofstream out("syntax_errors.txt", std::ios::app);
 		if (out.is_open())
@@ -1287,7 +1291,7 @@ public:
 			return tokens[current++]; // Match: return token and advance
 		}
 		error("Expected " + tokenTypeToString(expected) +
-			  " but found " + tokenTypeToString(currentToken().type));
+			" but found " + tokenTypeToString(currentToken().type));
 		throw consumeError();
 	}
 
@@ -1295,21 +1299,21 @@ public:
 	{
 		// Error recovery - skip until synchronization point
 		while (current < tokens.size() &&
-			   currentToken().lineNumber <= lineNumber)
+			currentToken().lineNumber <= lineNumber)
 		{
 			current++;
 		}
 	}
 
-	Token &peekToken()
+	Token& peekToken()
 	{
 		static Token dummy(TokenType::UNKNOWN, "", -1, "");
 		return (current + 1 < tokens.size()) ? tokens[current + 1] : dummy;
 	}
 
-	ParseTreeNode *parseProgram()
+	ParseTreeNode* parseProgram()
 	{
-		ParseTreeNode *programNode = new ParseTreeNode("program");
+		ParseTreeNode* programNode = new ParseTreeNode("program");
 		while (current < tokens.size())
 		{
 			try
@@ -1325,13 +1329,14 @@ public:
 				if (currentToken().type == TokenType::DEDENT)
 				{
 					consume(TokenType::DEDENT);
+					if (current >= tokens.size())
+					{
+						continue;
+					}
 				}
-				if (currentToken().type == TokenType::DefKeyword)
-					programNode->addChild(parseFunction());
-				else
-					programNode->addChild(parseStatement());
+				programNode->addChild(parseStatement());
 			}
-			catch (const consumeError &)
+			catch (const consumeError&)
 			{
 				synchronize(currentToken().lineNumber);
 			}
@@ -1340,9 +1345,9 @@ public:
 		return programNode;
 	}
 
-	ParseTreeNode *parseFunction()
+	ParseTreeNode* parseFunction()
 	{
-		ParseTreeNode *funcNode = new ParseTreeNode("function");
+		ParseTreeNode* funcNode = new ParseTreeNode("function");
 		try
 		{
 			funcNode->addChild(new ParseTreeNode(consume(TokenType::DefKeyword).lexeme));
@@ -1353,7 +1358,7 @@ public:
 			funcNode->addChild(new ParseTreeNode(consume(TokenType::Colon).lexeme));
 			funcNode->addChild(parseBlock());
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse function");
 			throw consumeError();
@@ -1361,9 +1366,9 @@ public:
 		return funcNode;
 	}
 
-	ParseTreeNode *parseParameters()
+	ParseTreeNode* parseParameters()
 	{
-		ParseTreeNode *paramsNode = new ParseTreeNode("parameters");
+		ParseTreeNode* paramsNode = new ParseTreeNode("parameters");
 		try
 		{
 			if (current < tokens.size() && currentToken().type != TokenType::RightParenthesis)
@@ -1377,7 +1382,7 @@ public:
 				}
 			}
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse paramters");
 			throw consumeError();
@@ -1385,9 +1390,9 @@ public:
 		return paramsNode;
 	}
 
-	ParseTreeNode *parseParameter()
+	ParseTreeNode* parseParameter()
 	{
-		ParseTreeNode *paramNode = new ParseTreeNode("parameter");
+		ParseTreeNode* paramNode = new ParseTreeNode("parameter");
 		try
 		{
 			paramNode->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
@@ -1397,7 +1402,7 @@ public:
 				paramNode->addChild(parseExpression());
 			}
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse parameter");
 			throw consumeError();
@@ -1405,9 +1410,14 @@ public:
 		return paramNode;
 	}
 
-	ParseTreeNode *parseStatement()
+	ParseTreeNode* parseStatement()
 	{
-		ParseTreeNode *stmtNode = new ParseTreeNode("statement");
+		if (current >= tokens.size())
+		{
+			throw consumeError();
+			error("Could not parse statement");
+		}
+		ParseTreeNode* stmtNode = new ParseTreeNode("statement");
 		try
 		{
 			switch (currentToken().type)
@@ -1425,7 +1435,7 @@ public:
 				{
 					// Look further: after dotted name, is it '(' → function call, or '=' → assignment?
 					size_t temp = current;
-					ParseTreeNode *dotted = parseDottedName();
+					ParseTreeNode* dotted = parseDottedName();
 					if (current < tokens.size())
 					{
 						if (currentToken().type == TokenType::LeftParenthesis)
@@ -1496,12 +1506,15 @@ public:
 			case TokenType::STRING_LITERAL:
 				stmtNode->addChild(parseFactor());
 				break;
+			case TokenType::DefKeyword:
+				stmtNode->addChild(parseFunction());
+				break;
 			default:
 				error("Cannot Parse Statement!");
 				throw consumeError();
 			}
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse statement");
 			throw consumeError();
@@ -1509,15 +1522,15 @@ public:
 		return stmtNode;
 	}
 
-	ParseTreeNode *parseReturn()
+	ParseTreeNode* parseReturn()
 	{
-		ParseTreeNode *returnNode = new ParseTreeNode("return_statement");
+		ParseTreeNode* returnNode = new ParseTreeNode("return_statement");
 		returnNode->addChild(new ParseTreeNode(consume(TokenType::ReturnKeyword).lexeme));
 		try
 		{
 			returnNode->addChild(parseExpression());
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse return statement");
 			throw consumeError();
@@ -1525,14 +1538,14 @@ public:
 		return returnNode;
 	}
 
-	ParseTreeNode *parsePass()
+	ParseTreeNode* parsePass()
 	{
-		ParseTreeNode *passNode = new ParseTreeNode("pass_statement");
+		ParseTreeNode* passNode = new ParseTreeNode("pass_statement");
 		try
 		{
 			passNode->addChild(new ParseTreeNode(consume(TokenType::PassKeyword).lexeme));
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse pass statement");
 			throw consumeError();
@@ -1540,14 +1553,14 @@ public:
 		return passNode;
 	}
 
-	ParseTreeNode *parseBreak()
+	ParseTreeNode* parseBreak()
 	{
-		ParseTreeNode *breakNode = new ParseTreeNode("break_statement");
+		ParseTreeNode* breakNode = new ParseTreeNode("break_statement");
 		try
 		{
 			breakNode->addChild(new ParseTreeNode(consume(TokenType::BreakKeyword).lexeme));
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse break");
 			throw consumeError();
@@ -1555,14 +1568,14 @@ public:
 		return breakNode;
 	}
 
-	ParseTreeNode *parseContinue()
+	ParseTreeNode* parseContinue()
 	{
-		ParseTreeNode *continueNode = new ParseTreeNode("continue_statement");
+		ParseTreeNode* continueNode = new ParseTreeNode("continue_statement");
 		try
 		{
 			continueNode->addChild(new ParseTreeNode(consume(TokenType::ContinueKeyword).lexeme));
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not continue statement");
 			throw consumeError();
@@ -1570,9 +1583,9 @@ public:
 		return continueNode;
 	}
 
-	ParseTreeNode *parseClassBlock()
+	ParseTreeNode* parseClassBlock()
 	{
-		ParseTreeNode *classBlockNode = new ParseTreeNode("class_block");
+		ParseTreeNode* classBlockNode = new ParseTreeNode("class_block");
 		int prevLine = currentToken().lineNumber;
 
 		try
@@ -1604,7 +1617,7 @@ public:
 			classBlockNode->addChild(new ParseTreeNode("DEDENT"));
 			consume(TokenType::DEDENT);
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse class block");
 			throw consumeError();
@@ -1613,9 +1626,14 @@ public:
 		return classBlockNode;
 	}
 
-	ParseTreeNode *parseBlock()
+	ParseTreeNode* parseBlock()
 	{
-		ParseTreeNode *blockNode = new ParseTreeNode("block");
+		ParseTreeNode* blockNode = new ParseTreeNode("block");
+		if (current >= tokens.size())
+		{
+			error("Could not parse block");
+			throw consumeError();
+		}
 		bool isSingleLine = (currentToken().type != TokenType::INDENT);
 		int prevLine = currentToken().lineNumber;
 		try
@@ -1624,7 +1642,7 @@ public:
 			{
 				consume(TokenType::INDENT);
 				blockNode->addChild(new ParseTreeNode("INDENT"));
-				if (currentToken().type == TokenType::DefKeyword)
+				if (current < tokens.size() && currentToken().type == TokenType::DefKeyword)
 				{
 					blockNode->addChild(parseFunction());
 				}
@@ -1646,7 +1664,7 @@ public:
 					blockNode->addChild(new ParseTreeNode("DEDENT"));
 					consume(TokenType::DEDENT);
 				}
-				catch (const consumeError &)
+				catch (const consumeError&)
 				{
 					return blockNode;
 				}
@@ -1656,7 +1674,7 @@ public:
 				blockNode->addChild(parseStatement());
 			}
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse block");
 			throw consumeError();
@@ -1664,9 +1682,9 @@ public:
 		return blockNode;
 	}
 
-	ParseTreeNode *parseWhileStmt()
+	ParseTreeNode* parseWhileStmt()
 	{
-		ParseTreeNode *whileNode = new ParseTreeNode("while_statement");
+		ParseTreeNode* whileNode = new ParseTreeNode("while_statement");
 		try
 		{
 			whileNode->addChild(new ParseTreeNode(consume(TokenType::WhileKeyword).lexeme));
@@ -1674,7 +1692,7 @@ public:
 			whileNode->addChild(new ParseTreeNode(consume(TokenType::Colon).lexeme));
 			whileNode->addChild(parseBlock());
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse while statement");
 			throw consumeError();
@@ -1682,9 +1700,9 @@ public:
 		return whileNode;
 	}
 
-	ParseTreeNode *parseForStmt()
+	ParseTreeNode* parseForStmt()
 	{
-		ParseTreeNode *forNode = new ParseTreeNode("for_statement");
+		ParseTreeNode* forNode = new ParseTreeNode("for_statement");
 		try
 		{
 			forNode->addChild(new ParseTreeNode(consume(TokenType::ForKeyword).lexeme));
@@ -1694,7 +1712,7 @@ public:
 			forNode->addChild(new ParseTreeNode(consume(TokenType::Colon).lexeme));
 			forNode->addChild(parseBlock());
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse for statement");
 			throw consumeError();
@@ -1702,25 +1720,25 @@ public:
 		return forNode;
 	}
 
-	ParseTreeNode *parseImport()
+	ParseTreeNode* parseImport()
 	{
-		ParseTreeNode *importNode = new ParseTreeNode("import_statement");
+		ParseTreeNode* importNode = new ParseTreeNode("import_statement");
 		try
 		{
-			if (currentToken().type == TokenType::ImportKeyword)
+			if (current < tokens.size() && currentToken().type == TokenType::ImportKeyword)
 			{
 				importNode->addChild(new ParseTreeNode(consume(TokenType::ImportKeyword).lexeme));
 				importNode->addChild(parseDottedName());
-				if (currentToken().type == TokenType::AsKeyword)
+				if (current < tokens.size() && currentToken().type == TokenType::AsKeyword)
 				{
 					importNode->addChild(new ParseTreeNode(consume(TokenType::AsKeyword).lexeme));
 					importNode->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
 				}
-				while (currentToken().type == TokenType::Comma)
+				while (current < tokens.size() && currentToken().type == TokenType::Comma)
 				{
 					importNode->addChild(new ParseTreeNode(consume(TokenType::Comma).lexeme));
 					importNode->addChild(parseDottedName());
-					if (currentToken().type == TokenType::AsKeyword)
+					if (current < tokens.size() && currentToken().type == TokenType::AsKeyword)
 					{
 						importNode->addChild(new ParseTreeNode(consume(TokenType::AsKeyword).lexeme));
 						importNode->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
@@ -1732,22 +1750,22 @@ public:
 				importNode->addChild(new ParseTreeNode(consume(TokenType::FromKeyword).lexeme));
 				importNode->addChild(parseDottedName());
 				importNode->addChild(new ParseTreeNode(consume(TokenType::ImportKeyword).lexeme));
-				if (currentToken().type == TokenType::IDENTIFIER)
+				if (current < tokens.size() && currentToken().type == TokenType::IDENTIFIER)
 				{
 					importNode->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
-					if (currentToken().type == TokenType::AsKeyword)
+					if (current < tokens.size() && currentToken().type == TokenType::AsKeyword)
 					{
 						importNode->addChild(new ParseTreeNode(consume(TokenType::AsKeyword).lexeme));
 						importNode->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
 					}
 				}
-				else if (currentToken().lexeme == "*")
+				else if (current < tokens.size() && currentToken().lexeme == "*")
 					importNode->addChild(new ParseTreeNode(consume(TokenType::OPERATOR).lexeme));
 				else
 					throw new consumeError();
 			}
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse import");
 			throw consumeError();
@@ -1755,19 +1773,19 @@ public:
 		return importNode;
 	}
 
-	ParseTreeNode *parseDottedName()
+	ParseTreeNode* parseDottedName()
 	{
-		ParseTreeNode *dottedNode = new ParseTreeNode("dotted_name");
+		ParseTreeNode* dottedNode = new ParseTreeNode("dotted_name");
 		try
 		{
 			dottedNode->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
-			while (currentToken().type == TokenType::Dot)
+			while (current < tokens.size() && currentToken().type == TokenType::Dot)
 			{
 				dottedNode->addChild(new ParseTreeNode(consume(TokenType::Dot).lexeme));
 				dottedNode->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
 			}
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse dotted name");
 			throw consumeError();
@@ -1775,15 +1793,15 @@ public:
 		return dottedNode;
 	}
 
-	ParseTreeNode *parseRaise()
+	ParseTreeNode* parseRaise()
 	{
-		ParseTreeNode *raiseNode = new ParseTreeNode("raise_statement");
+		ParseTreeNode* raiseNode = new ParseTreeNode("raise_statement");
 		try
 		{
 			raiseNode->addChild(new ParseTreeNode(consume(TokenType::RaiseKeyword).lexeme));
 			raiseNode->addChild(parseExpression());
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse raise statement");
 			throw consumeError();
@@ -1791,9 +1809,9 @@ public:
 		return raiseNode;
 	}
 
-	ParseTreeNode *parseTryStmt()
+	ParseTreeNode* parseTryStmt()
 	{
-		ParseTreeNode *tryNode = new ParseTreeNode("try_statement");
+		ParseTreeNode* tryNode = new ParseTreeNode("try_statement");
 		try
 		{
 			tryNode->addChild(new ParseTreeNode(consume(TokenType::TryKeyword).lexeme));
@@ -1802,12 +1820,12 @@ public:
 
 			while (current < tokens.size() && currentToken().type == TokenType::ExceptKeyword)
 			{
-				auto *exceptNode = new ParseTreeNode("except_clause");
+				auto* exceptNode = new ParseTreeNode("except_clause");
 				exceptNode->addChild(new ParseTreeNode(consume(TokenType::ExceptKeyword).lexeme));
-				if (currentToken().type == TokenType::IDENTIFIER)
+				if (current < tokens.size() && currentToken().type == TokenType::IDENTIFIER)
 				{
 					exceptNode->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
-					if (currentToken().type == TokenType::AsKeyword)
+					if (current < tokens.size() && currentToken().type == TokenType::AsKeyword)
 					{
 						exceptNode->addChild(new ParseTreeNode(consume(TokenType::AsKeyword).lexeme));
 						exceptNode->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
@@ -1820,7 +1838,7 @@ public:
 
 			if (current < tokens.size() && currentToken().type == TokenType::ElseKeyword)
 			{
-				auto *elseNode = new ParseTreeNode("else_clause");
+				auto* elseNode = new ParseTreeNode("else_clause");
 				elseNode->addChild(new ParseTreeNode(consume(TokenType::ElseKeyword).lexeme));
 				elseNode->addChild(new ParseTreeNode(consume(TokenType::Colon).lexeme));
 				elseNode->addChild(parseBlock());
@@ -1829,14 +1847,14 @@ public:
 
 			if (current < tokens.size() && currentToken().type == TokenType::FinallyKeyword)
 			{
-				auto *finallyNode = new ParseTreeNode("finally_clause");
+				auto* finallyNode = new ParseTreeNode("finally_clause");
 				finallyNode->addChild(new ParseTreeNode(consume(TokenType::FinallyKeyword).lexeme));
 				finallyNode->addChild(new ParseTreeNode(consume(TokenType::Colon).lexeme));
 				finallyNode->addChild(parseBlock());
 				tryNode->addChild(finallyNode);
 			}
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse try statement");
 			throw consumeError();
@@ -1845,15 +1863,15 @@ public:
 		return tryNode;
 	}
 
-	ParseTreeNode *parseClassDef()
+	ParseTreeNode* parseClassDef()
 	{
-		ParseTreeNode *classNode = new ParseTreeNode("class_def");
+		ParseTreeNode* classNode = new ParseTreeNode("class_def");
 		try
 		{
 			classNode->addChild(new ParseTreeNode(consume(TokenType::ClassKeyword).lexeme));
 			classNode->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
 
-			if (currentToken().type == TokenType::LeftParenthesis)
+			if (current < tokens.size() && currentToken().type == TokenType::LeftParenthesis)
 			{
 
 				classNode->addChild(new ParseTreeNode(consume(TokenType::LeftParenthesis).lexeme));
@@ -1864,7 +1882,7 @@ public:
 			classNode->addChild(new ParseTreeNode(consume(TokenType::Colon).lexeme));
 			classNode->addChild(parseClassBlock());
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse class def");
 			throw consumeError();
@@ -1872,10 +1890,10 @@ public:
 		return classNode;
 	}
 
-	ParseTreeNode *parseConditionalStmt()
+	ParseTreeNode* parseConditionalStmt()
 	{
 
-		auto *ifNode = new ParseTreeNode("conditional_statement");
+		auto* ifNode = new ParseTreeNode("conditional_statement");
 		try
 		{
 			ifNode->addChild(new ParseTreeNode(consume(TokenType::IfKeyword).lexeme));
@@ -1883,7 +1901,7 @@ public:
 			ifNode->addChild(new ParseTreeNode(consume(TokenType::Colon).lexeme));
 			ifNode->addChild(parseBlock());
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse conditional");
 			throw consumeError();
@@ -1891,7 +1909,7 @@ public:
 
 		while (current < tokens.size() && currentToken().type == TokenType::ElifKeyword)
 		{
-			auto *elifNode = new ParseTreeNode("elif_clause");
+			auto* elifNode = new ParseTreeNode("elif_clause");
 			try
 			{
 				elifNode->addChild(new ParseTreeNode(consume(TokenType::ElifKeyword).lexeme));
@@ -1900,7 +1918,7 @@ public:
 				elifNode->addChild(parseBlock());
 				ifNode->addChild(elifNode);
 			}
-			catch (const consumeError &)
+			catch (const consumeError&)
 			{
 				error("Could not parse elif");
 				throw consumeError();
@@ -1909,7 +1927,7 @@ public:
 
 		if (current < tokens.size() && currentToken().type == TokenType::ElseKeyword)
 		{
-			auto *elseNode = new ParseTreeNode("else_clause");
+			auto* elseNode = new ParseTreeNode("else_clause");
 			try
 			{
 				elseNode->addChild(new ParseTreeNode(consume(TokenType::ElseKeyword).lexeme));
@@ -1917,7 +1935,7 @@ public:
 				elseNode->addChild(parseBlock());
 				ifNode->addChild(elseNode);
 			}
-			catch (const consumeError &)
+			catch (const consumeError&)
 			{
 				error("Could not parse else");
 				throw consumeError();
@@ -1927,13 +1945,13 @@ public:
 		return ifNode;
 	}
 
-	ParseTreeNode *parseAssignmentStmt()
+	ParseTreeNode* parseAssignmentStmt()
 	{
-		ParseTreeNode *assignNode = new ParseTreeNode("assignment");
+		ParseTreeNode* assignNode = new ParseTreeNode("assignment");
 		try
 		{
 			// Parse LHS identifiers or dotted names
-			ParseTreeNode *lhs = new ParseTreeNode("lhs");
+			ParseTreeNode* lhs = new ParseTreeNode("lhs");
 
 			// Handle first identifier or dotted name
 			if (peekToken().type == TokenType::Dot)
@@ -1956,7 +1974,7 @@ public:
 			assignNode->addChild(parseAssignOp());
 
 			// Parse RHS expressions
-			ParseTreeNode *rhs = new ParseTreeNode("rhs");
+			ParseTreeNode* rhs = new ParseTreeNode("rhs");
 			rhs->addChild(parseExpression());
 			while (current < tokens.size() && currentToken().type == TokenType::Comma)
 			{
@@ -1965,7 +1983,7 @@ public:
 			}
 			assignNode->addChild(rhs);
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse assignment");
 			throw consumeError();
@@ -1974,9 +1992,9 @@ public:
 		return assignNode;
 	}
 
-	ParseTreeNode *parseAssignOp()
+	ParseTreeNode* parseAssignOp()
 	{
-		ParseTreeNode *assignOpNode = new ParseTreeNode("Assign_OP");
+		ParseTreeNode* assignOpNode = new ParseTreeNode("Assign_OP");
 		try
 		{
 			if (current < tokens.size() && currentToken().type == TokenType::OPERATOR)
@@ -1997,7 +2015,7 @@ public:
 			else
 				throw consumeError();
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse Assign OP");
 			throw consumeError();
@@ -2005,9 +2023,9 @@ public:
 		return assignOpNode;
 	}
 
-	ParseTreeNode *parseFunctionCall()
+	ParseTreeNode* parseFunctionCall()
 	{
-		ParseTreeNode *callNode = new ParseTreeNode("function_call");
+		ParseTreeNode* callNode = new ParseTreeNode("function_call");
 		try
 		{
 			if (peekToken().type == TokenType::Dot)
@@ -2028,7 +2046,7 @@ public:
 
 			callNode->addChild(new ParseTreeNode(consume(TokenType::RightParenthesis).lexeme));
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse function call");
 			throw consumeError();
@@ -2036,14 +2054,14 @@ public:
 		return callNode;
 	}
 
-	ParseTreeNode *parseExpression()
+	ParseTreeNode* parseExpression()
 	{
-		ParseTreeNode *exprNode = new ParseTreeNode("expression");
+		ParseTreeNode* exprNode = new ParseTreeNode("expression");
 		try
 		{
 			exprNode->addChild(parseOrExpr());
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse expression");
 			throw consumeError();
@@ -2051,9 +2069,9 @@ public:
 		return exprNode;
 	}
 
-	ParseTreeNode *parseOrExpr()
+	ParseTreeNode* parseOrExpr()
 	{
-		ParseTreeNode *orNode = new ParseTreeNode("or_expression");
+		ParseTreeNode* orNode = new ParseTreeNode("or_expression");
 		try
 		{
 			orNode->addChild(parseAndExpr());
@@ -2063,7 +2081,7 @@ public:
 				orNode->addChild(parseAndExpr());
 			}
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse or expression");
 			throw consumeError();
@@ -2071,9 +2089,9 @@ public:
 		return orNode;
 	}
 
-	ParseTreeNode *parseAndExpr()
+	ParseTreeNode* parseAndExpr()
 	{
-		ParseTreeNode *andNode = new ParseTreeNode("and_expression");
+		ParseTreeNode* andNode = new ParseTreeNode("and_expression");
 		try
 		{
 			andNode->addChild(parseNotExpr());
@@ -2083,7 +2101,7 @@ public:
 				andNode->addChild(parseNotExpr());
 			}
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse and expression");
 			throw consumeError();
@@ -2091,9 +2109,9 @@ public:
 		return andNode;
 	}
 
-	ParseTreeNode *parseNotExpr()
+	ParseTreeNode* parseNotExpr()
 	{
-		ParseTreeNode *notNode = new ParseTreeNode("not_expression");
+		ParseTreeNode* notNode = new ParseTreeNode("not_expression");
 		try
 		{
 			if (current < tokens.size() && currentToken().type == TokenType::NotKeyword)
@@ -2106,7 +2124,7 @@ public:
 				notNode->addChild(parseComparison());
 			}
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse not expression");
 			throw consumeError();
@@ -2114,19 +2132,24 @@ public:
 		return notNode;
 	}
 
-	ParseTreeNode *parseComparison()
+	ParseTreeNode* parseComparison()
 	{
-		ParseTreeNode *compNode = new ParseTreeNode("comparison");
+		ParseTreeNode* compNode = new ParseTreeNode("comparison");
 		try
 		{
 			compNode->addChild(parseArithmetic());
-			while (current < tokens.size() && currentToken().type == TokenType::OPERATOR)
+			while (current < tokens.size() &&
+				(currentToken().type == TokenType::OPERATOR ||
+					currentToken().type == TokenType::InKeyword ||
+					currentToken().type == TokenType::IsKeyword ||
+					currentToken().type == TokenType::NotKeyword)
+				)
 			{
 				compNode->addChild(parseOp());
 				compNode->addChild(parseArithmetic());
 			}
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse comparison");
 			throw consumeError();
@@ -2134,9 +2157,14 @@ public:
 		return compNode;
 	}
 
-	ParseTreeNode *parseOp()
+	ParseTreeNode* parseOp()
 	{
-		ParseTreeNode *assignOpNode = new ParseTreeNode("OP");
+		ParseTreeNode* assignOpNode = new ParseTreeNode("OP");
+		if (current >= tokens.size())
+		{
+			error("Could not parse OP");
+			throw consumeError();
+		}
 		if (currentToken().lexeme == "==" ||
 			currentToken().lexeme == "!=" ||
 			currentToken().lexeme == "<" ||
@@ -2145,27 +2173,45 @@ public:
 			currentToken().lexeme == "<=" ||
 			currentToken().lexeme == "&" ||
 			currentToken().lexeme == "^" ||
-			currentToken().lexeme == "|" || 
+			currentToken().lexeme == "|" ||
 			currentToken().lexeme == "<<" ||
-			 currentToken().lexeme == ">>")
-
+			currentToken().lexeme == ">>")
 		{
 			try
 			{
 				assignOpNode->addChild(new ParseTreeNode(consume(TokenType::OPERATOR).lexeme));
 			}
-			catch (const consumeError &)
+			catch (const consumeError&)
 			{
-				error("Could not COMP OP");
+				error("Could not parse OP");
 				throw consumeError();
+			}
+		}
+		else {
+			if (currentToken().type == TokenType::IsKeyword)
+			{
+				assignOpNode->addChild(new ParseTreeNode(consume(TokenType::IsKeyword).lexeme));
+				if (current < tokens.size() && currentToken().type == TokenType::NotKeyword)
+				{
+					assignOpNode->addChild(new ParseTreeNode(consume(TokenType::NotKeyword).lexeme));
+				}
+			}
+			else if (currentToken().type == TokenType::InKeyword)
+			{
+				assignOpNode->addChild(new ParseTreeNode(consume(TokenType::InKeyword).lexeme));
+			}
+			else if (currentToken().type == TokenType::NotKeyword && peekToken().type == TokenType::InKeyword)
+			{
+				assignOpNode->addChild(new ParseTreeNode(consume(TokenType::NotKeyword).lexeme));
+				assignOpNode->addChild(new ParseTreeNode(consume(TokenType::InKeyword).lexeme));
 			}
 		}
 		return assignOpNode;
 	}
 
-	ParseTreeNode *parseArithmetic()
+	ParseTreeNode* parseArithmetic()
 	{
-		ParseTreeNode *arithmNode = new ParseTreeNode("arithmetic");
+		ParseTreeNode* arithmNode = new ParseTreeNode("arithmetic");
 		try
 		{
 			arithmNode->addChild(parseTerm());
@@ -2180,7 +2226,7 @@ public:
 					break;
 			}
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not Arithmetic");
 			throw consumeError();
@@ -2188,9 +2234,9 @@ public:
 		return arithmNode;
 	}
 
-	ParseTreeNode *parseTerm()
+	ParseTreeNode* parseTerm()
 	{
-		ParseTreeNode *termNode = new ParseTreeNode("term");
+		ParseTreeNode* termNode = new ParseTreeNode("term");
 		try
 		{
 			termNode->addChild(parseFactor());
@@ -2205,7 +2251,7 @@ public:
 					break;
 			}
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse Term");
 			throw consumeError();
@@ -2213,9 +2259,9 @@ public:
 		return termNode;
 	}
 
-	ParseTreeNode *parseArguments()
+	ParseTreeNode* parseArguments()
 	{
-		ParseTreeNode *argNode = new ParseTreeNode("arguments");
+		ParseTreeNode* argNode = new ParseTreeNode("arguments");
 		try
 		{
 			argNode->addChild(parseExpression());
@@ -2225,7 +2271,7 @@ public:
 				argNode->addChild(parseExpression());
 			}
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not arguments");
 			throw consumeError();
@@ -2233,16 +2279,16 @@ public:
 		return argNode;
 	}
 
-	ParseTreeNode *parseFactor()
+	ParseTreeNode* parseFactor()
 	{
-		ParseTreeNode *factorNode = new ParseTreeNode("factor");
+		ParseTreeNode* factorNode = new ParseTreeNode("factor");
 		try
 		{
-			if (currentToken().type == TokenType::NUMBER)
+			if (current < tokens.size() && currentToken().type == TokenType::NUMBER)
 			{
 				factorNode->addChild(new ParseTreeNode(consume(TokenType::NUMBER).lexeme));
 			}
-			else if (currentToken().type == TokenType::IDENTIFIER)
+			else if (current < tokens.size() && currentToken().type == TokenType::IDENTIFIER)
 			{
 				if (peekToken().type == TokenType::Dot)
 				{
@@ -2250,10 +2296,10 @@ public:
 					factorNode->addChild(parseDottedName());
 
 					// Check for method call
-					if (currentToken().type == TokenType::LeftParenthesis)
+					if (current < tokens.size() && currentToken().type == TokenType::LeftParenthesis)
 					{
 						factorNode->addChild(new ParseTreeNode(consume(TokenType::LeftParenthesis).lexeme));
-						if (currentToken().type != TokenType::RightParenthesis)
+						if (current < tokens.size() && currentToken().type != TokenType::RightParenthesis)
 							factorNode->addChild(parseArguments());
 						factorNode->addChild(new ParseTreeNode(consume(TokenType::RightParenthesis).lexeme));
 					}
@@ -2263,30 +2309,30 @@ public:
 					// Simple identifier or function call
 					factorNode->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
 
-					if (currentToken().type == TokenType::LeftParenthesis)
+					if (current < tokens.size() && currentToken().type == TokenType::LeftParenthesis)
 					{
 						factorNode->addChild(new ParseTreeNode(consume(TokenType::LeftParenthesis).lexeme));
-						if (currentToken().type != TokenType::RightParenthesis)
+						if (current < tokens.size() && currentToken().type != TokenType::RightParenthesis)
 							factorNode->addChild(parseArguments());
 						factorNode->addChild(new ParseTreeNode(consume(TokenType::RightParenthesis).lexeme));
 					}
 				}
 			}
-			else if (currentToken().type == TokenType::STRING_LITERAL)
+			else if (current < tokens.size() && currentToken().type == TokenType::STRING_LITERAL)
 			{
 				factorNode->addChild(new ParseTreeNode(consume(TokenType::STRING_LITERAL).lexeme));
 			}
-			else if (currentToken().type == TokenType::LeftParenthesis)
+			else if (current < tokens.size() && currentToken().type == TokenType::LeftParenthesis)
 			{
-				ParseTreeNode *tupleOrParenNode = new ParseTreeNode("tuple_or_group");
+				ParseTreeNode* tupleOrParenNode = new ParseTreeNode("tuple_or_group");
 				tupleOrParenNode->addChild(new ParseTreeNode(consume(TokenType::LeftParenthesis).lexeme));
 
 				tupleOrParenNode->addChild(parseExpression());
 
-				if (currentToken().type == TokenType::Comma)
+				if (current < tokens.size() && currentToken().type == TokenType::Comma)
 				{
 					// It's a tuple
-					while (currentToken().type == TokenType::Comma)
+					while (current < tokens.size() && currentToken().type == TokenType::Comma)
 					{
 						tupleOrParenNode->addChild(new ParseTreeNode(consume(TokenType::Comma).lexeme));
 						tupleOrParenNode->addChild(parseExpression());
@@ -2297,27 +2343,27 @@ public:
 				factorNode->addChild(tupleOrParenNode);
 			}
 
-			else if (currentToken().type == TokenType::FalseKeyword)
+			else if (current < tokens.size() && currentToken().type == TokenType::FalseKeyword)
 			{
 				factorNode->addChild(new ParseTreeNode(consume(TokenType::FalseKeyword).lexeme));
 			}
-			else if (currentToken().type == TokenType::TrueKeyword)
+			else if (current < tokens.size() && currentToken().type == TokenType::TrueKeyword)
 			{
 				factorNode->addChild(new ParseTreeNode(consume(TokenType::TrueKeyword).lexeme));
 			}
-			else if (currentToken().type == TokenType::NoneKeyword)
+			else if (current < tokens.size() && currentToken().type == TokenType::NoneKeyword)
 			{
 				factorNode->addChild(new ParseTreeNode(consume(TokenType::NoneKeyword).lexeme));
 			}
-			else if (currentToken().type == TokenType::LeftBracket)
+			else if (current < tokens.size() && currentToken().type == TokenType::LeftBracket)
 			{
 				// list
-				ParseTreeNode *listNode = new ParseTreeNode("list_literal");
+				ParseTreeNode* listNode = new ParseTreeNode("list_literal");
 				listNode->addChild(new ParseTreeNode(consume(TokenType::LeftBracket).lexeme));
-				if (currentToken().type != TokenType::RightBracket)
+				if (current < tokens.size() && currentToken().type != TokenType::RightBracket)
 				{
 					listNode->addChild(parseExpression());
-					while (currentToken().type == TokenType::Comma)
+					while (current < tokens.size() && currentToken().type == TokenType::Comma)
 					{
 						listNode->addChild(new ParseTreeNode(consume(TokenType::Comma).lexeme));
 						listNode->addChild(parseExpression());
@@ -2326,12 +2372,12 @@ public:
 				listNode->addChild(new ParseTreeNode(consume(TokenType::RightBracket).lexeme));
 				factorNode->addChild(listNode);
 			}
-			else if (currentToken().type == TokenType::LeftBrace)
+			else if (current < tokens.size() && currentToken().type == TokenType::LeftBrace)
 			{
 				// dict or set
 				size_t temp = current + 1;
 				bool isDict = false;
-				
+
 				while (temp < tokens.size() && tokens[temp].type != TokenType::RightBrace)
 				{
 					if (tokens[temp].type == TokenType::Colon)
@@ -2344,14 +2390,14 @@ public:
 				if (isDict)
 				{
 					// dict
-					ParseTreeNode *dictNode = new ParseTreeNode("dict_literal");
+					ParseTreeNode* dictNode = new ParseTreeNode("dict_literal");
 					dictNode->addChild(new ParseTreeNode(consume(TokenType::LeftBrace).lexeme));
-					if (currentToken().type != TokenType::RightBrace)
+					if (current < tokens.size() && currentToken().type != TokenType::RightBrace)
 					{
 						dictNode->addChild(parseExpression());
 						dictNode->addChild(new ParseTreeNode(consume(TokenType::Colon).lexeme));
 						dictNode->addChild(parseExpression());
-						while (currentToken().type == TokenType::Comma)
+						while (current < tokens.size() && currentToken().type == TokenType::Comma)
 						{
 							dictNode->addChild(new ParseTreeNode(consume(TokenType::Comma).lexeme));
 							dictNode->addChild(parseExpression());
@@ -2365,12 +2411,12 @@ public:
 				else
 				{
 					// set
-					ParseTreeNode *setNode = new ParseTreeNode("set_literal");
+					ParseTreeNode* setNode = new ParseTreeNode("set_literal");
 					setNode->addChild(new ParseTreeNode(consume(TokenType::LeftBrace).lexeme));
-					if (currentToken().type != TokenType::RightBrace)
+					if (current < tokens.size() && currentToken().type != TokenType::RightBrace)
 					{
 						setNode->addChild(parseExpression());
-						while (currentToken().type == TokenType::Comma)
+						while (current < tokens.size() && currentToken().type == TokenType::Comma)
 						{
 							setNode->addChild(new ParseTreeNode(consume(TokenType::Comma).lexeme));
 							setNode->addChild(parseExpression());
@@ -2381,19 +2427,19 @@ public:
 				}
 			}
 
-			else if (currentToken().lexeme == "+" || currentToken().lexeme == "-" || currentToken().lexeme == "~" || currentToken().type == TokenType::NotKeyword)
+			else if (current < tokens.size() && (currentToken().lexeme == "+" || currentToken().lexeme == "-" || currentToken().lexeme == "~" || currentToken().type == TokenType::NotKeyword))
 			{
 				factorNode->addChild(new ParseTreeNode(consume(currentToken().type).lexeme));
 				factorNode->addChild(parseFactor());
 			}
-			
+
 			else
 			{
 				error("Could not parse Factor");
 				throw consumeError();
 			}
 		}
-		catch (const consumeError &)
+		catch (const consumeError&)
 		{
 			error("Could not parse factor");
 			throw consumeError();
@@ -2402,7 +2448,7 @@ public:
 	}
 };
 
-void printParseTree(const ParseTreeNode *node, int depth = 0)
+void printParseTree(const ParseTreeNode* node, int depth = 0)
 {
 	if (node == nullptr)
 		return;
@@ -2414,7 +2460,7 @@ void printParseTree(const ParseTreeNode *node, int depth = 0)
 	std::cout << "|- " << node->label << std::endl; // Assuming 'content' is a string
 
 	// Recursively print children
-	for (const auto &child : node->children)
+	for (const auto& child : node->children)
 	{ // Assuming 'children' is a collection
 		printParseTree(child, depth + 1);
 	}
@@ -2423,7 +2469,7 @@ void printParseTree(const ParseTreeNode *node, int depth = 0)
 // ----------------------------------------------
 // 8. Utility function to read the entire file
 // ----------------------------------------------
-string readFile(const string &filename)
+string readFile(const string& filename)
 {
 	ifstream fileStream(filename);
 	if (!fileStream.is_open())
@@ -2436,7 +2482,7 @@ string readFile(const string &filename)
 }
 
 // Recursive helper to export node and its children
-void exportToDot(ParseTreeNode *node, ofstream &out, int &nodeId, int parentId = -1)
+void exportToDot(ParseTreeNode* node, ofstream& out, int& nodeId, int parentId = -1)
 {
 	int currentId = nodeId++;
 
@@ -2469,7 +2515,7 @@ void exportToDot(ParseTreeNode *node, ofstream &out, int &nodeId, int parentId =
 }
 
 // Export the full tree to a DOT file
-void saveTreeToDot(ParseTreeNode *root, const string &filename)
+void saveTreeToDot(ParseTreeNode* root, const string& filename)
 {
 	ofstream out(filename);
 	out << "digraph ParseTree {\n";
@@ -2490,7 +2536,7 @@ int main()
 {
 	try
 	{
-		string sourceCode = readFile("script.py");
+		string sourceCode = readFile("omar.py");
 
 		vector<Error> errors;
 		// 2. Lexical analysis: produce tokens
@@ -2507,7 +2553,7 @@ int main()
 
 		// 3. Print out tokens (for demonstration)
 		cout << "\n\nTokens:\n";
-		for (auto &tk : tokens)
+		for (auto& tk : tokens)
 		{
 			cout << "< ";
 			switch (tk.type)
@@ -2696,12 +2742,12 @@ int main()
 
 		Syntax_Analyzer sa = Syntax_Analyzer();
 		sa.tokens = tokens;
-		ParseTreeNode *root = sa.parseProgram();
+		ParseTreeNode* root = sa.parseProgram();
 		cout << "\n\n\n\n";
 		printParseTree(root);
 		saveTreeToDot(root, "tree.dot");
 	}
-	catch (const exception &ex)
+	catch (const exception& ex)
 	{
 		cerr << "Error: " << ex.what() << endl;
 		return 1;

@@ -1,4 +1,4 @@
-program → (function | statement)*
+program → (statement)*
 
 function → 'def' IDENTIFIER '(' parameters ')' ':' block
 parameters → (parameter (',' parameter)*)?
@@ -18,6 +18,7 @@ statement → assignment_stmt
           | raise_stmt
           | try_stmt
           | class_def
+		  | function
 
 assignment_stmt → identifier_list ASSIGN_OP expression_list
 identifier_list → (IDENTIFIER | dotted_name) (',' (IDENTIFIER | dotted_name))*
@@ -45,10 +46,10 @@ class_def → 'class' IDENTIFIER ('(' IDENTIFIER ')')? ':' class_block
 class_block → NEWLINE INDENT class_member+ DEDENT
 class_member → function | assignment_stmt
 
-iterative_stmt → 'while' (not)? expression ':' block
-               | 'for' IDENTIFIER (not)? 'in' expression ':' block
+iterative_stmt → 'while' expression ':' block
+               | 'for' IDENTIFIER 'in' expression ':' block
 
-conditional_stmt → 'if' (not)? expression ':' block ('elif' (not)? expression ':' block)* ('else' ':' block)?
+conditional_stmt → 'if' expression ':' block ('elif' expression ':' block)* ('else' ':' block)?
 
 function_call_stmt → dotted_name '(' arguments ')'
 
@@ -61,7 +62,7 @@ and_expr → not_expr ('and' not_expr)*
 not_expr → 'not' not_expr | comparison
 comparison → arithmetic_expr (OP arithmetic_expr)*
 
-OP → '==' | '!=' | '<' | '>' | '>=' | '<='
+OP → '==' | '!=' | '<' | '>' | '>=' | '<=' | 'in' | 'not in' | 'is' | 'is not'
 
 arithmetic_expr → term (('+' | '-') term)*
 term → factor (('*' | '/' | '%') factor)*
