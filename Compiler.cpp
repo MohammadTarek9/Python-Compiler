@@ -2329,6 +2329,7 @@ public:
 			}
 			else if (current < tokens.size() && currentToken().type == TokenType::STRING_LITERAL)
 			{
+				// Handle string literal
 				factorNode->addChild(new ParseTreeNode(consume(TokenType::STRING_LITERAL).lexeme));
 			}
 			else if (current < tokens.size() && currentToken().type == TokenType::LeftParenthesis)
@@ -2336,20 +2337,36 @@ public:
 				ParseTreeNode *tupleOrParenNode = new ParseTreeNode("tuple_or_group");
 				tupleOrParenNode->addChild(new ParseTreeNode(consume(TokenType::LeftParenthesis).lexeme));
 
-				tupleOrParenNode->addChild(parseExpression());
-
-				if (current < tokens.size() && currentToken().type == TokenType::Comma)
+				// check for empty tuple: ()
+				if (current < tokens.size() && currentToken().type == TokenType::RightParenthesis)
 				{
-					// It's a tuple
-					while (current < tokens.size() && currentToken().type == TokenType::Comma)
-					{
-						tupleOrParenNode->addChild(new ParseTreeNode(consume(TokenType::Comma).lexeme));
-						tupleOrParenNode->addChild(parseExpression());
-					}
+					// empty tuple
+					tupleOrParenNode->addChild(new ParseTreeNode(consume(TokenType::RightParenthesis).lexeme));
+					factorNode->addChild(tupleOrParenNode);
 				}
+				else
+				{
+					// [arse first expression
+					tupleOrParenNode->addChild(parseExpression());
 
-				tupleOrParenNode->addChild(new ParseTreeNode(consume(TokenType::RightParenthesis).lexeme));
-				factorNode->addChild(tupleOrParenNode);
+					// check for comma (tuple)
+					if (current < tokens.size() && currentToken().type == TokenType::Comma)
+					{
+						// at least one comma, so it's a tuple
+						while (current < tokens.size() && currentToken().type == TokenType::Comma)
+						{
+							tupleOrParenNode->addChild(new ParseTreeNode(consume(TokenType::Comma).lexeme));
+							// Allow for (2,) as a one-element tuple (comma with no second element)
+							if (current < tokens.size() && currentToken().type != TokenType::RightParenthesis)
+							{
+								tupleOrParenNode->addChild(parseExpression());
+							}
+						}
+					}
+
+					tupleOrParenNode->addChild(new ParseTreeNode(consume(TokenType::RightParenthesis).lexeme));
+					factorNode->addChild(tupleOrParenNode);
+				}
 			}
 
 			else if (current < tokens.size() && currentToken().type == TokenType::FalseKeyword)

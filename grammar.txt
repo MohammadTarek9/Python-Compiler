@@ -119,11 +119,6 @@ unary_op → '+' | '-' | '~' | 'not'
 list_literal → '[' list_items ']'
 list_items → expression_list | ε
 tuple_literal → '(' tuple_items ')'
-
-# Cases:
-# 1. Empty: ()
-# 2. Single element: (x,)
-# 3. Multiple elements: (x, y) or (x, y, z)
 tuple_items → ε                      
     | expression ','         
     | expression ',' expression additional_expressions 

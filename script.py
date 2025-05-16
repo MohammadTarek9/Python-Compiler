@@ -1,6 +1,8 @@
 """
 A multi-line docstring at the top of the file
 """
+myTup = (1,2,)
+
 import math
 x = 1 # a global variable
 class MyClass:
@@ -34,10 +36,13 @@ def myFunction(x, y=10):
     for i in myList:
         print(i)
     mySet = {4, 5, 6}
+    emptyTuple = ()
+    emptyList = []
+    
     myDict = {7: "seven", 8: "eight", 9: "nine"}
     myTuple = (0, 1, 2)
     myTuple2 = (12+14) # not handled as a tuple
-    expr3 = () 
+    expr3 = (12, 14) # this is a tuple] 
     print(type(expr3))
     #wrong_tuple = (12, 14
     names = ["hey", "hello", "hi"]
