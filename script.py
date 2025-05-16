@@ -2,7 +2,7 @@
 A multi-line docstring at the top of the file
 """
 myTup = (1,2,)
-
+x,y = 1
 import math
 x = 1 # a global variable
 class MyClass:
@@ -98,7 +98,7 @@ def main():
     qqqqqq,pppppp = tttttt, rrrrrr
     alpha,beta,gamma = 5,6,7
     qwqwqw, rrr = [1, 2], [3, 4]
-    test10,test11= [1,4]
+    print(y)
     print("Hello World")
     print(result)
 if __name__ == "__main__":

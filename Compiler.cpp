@@ -1962,22 +1962,26 @@ public:
 		{
 			// Parse LHS identifiers or dotted names
 			ParseTreeNode *lhs = new ParseTreeNode("lhs");
+			std::vector<ParseTreeNode *> lhsIdentifiers;
 
 			// Handle first identifier or dotted name
 			if (peekToken().type == TokenType::Dot)
-				lhs->addChild(parseDottedName());
+				lhsIdentifiers.push_back(parseDottedName());
 			else
-				lhs->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
+				lhsIdentifiers.push_back(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
 
 			// Support multiple identifiers: x, y = ...
 			while (current < tokens.size() && currentToken().type == TokenType::Comma)
 			{
 				lhs->addChild(new ParseTreeNode(consume(TokenType::Comma).lexeme));
 				if (peekToken().type == TokenType::Dot)
-					lhs->addChild(parseDottedName());
+					lhsIdentifiers.push_back(parseDottedName());
 				else
-					lhs->addChild(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
+					lhsIdentifiers.push_back(new ParseTreeNode(consume(TokenType::IDENTIFIER).lexeme));
 			}
+			// Add all LHS identifiers to lhs node
+			for (auto *id : lhsIdentifiers)
+				lhs->addChild(id);
 			assignNode->addChild(lhs);
 
 			// Assign operator (=, +=, etc.)
@@ -1985,13 +1989,25 @@ public:
 
 			// Parse RHS expressions
 			ParseTreeNode *rhs = new ParseTreeNode("rhs");
-			rhs->addChild(parseExpression());
+			vector<ParseTreeNode *> rhsExprs;
+			rhsExprs.push_back(parseExpression());
 			while (current < tokens.size() && currentToken().type == TokenType::Comma)
 			{
 				rhs->addChild(new ParseTreeNode(consume(TokenType::Comma).lexeme));
-				rhs->addChild(parseExpression());
+				rhsExprs.push_back(parseExpression());
 			}
+			// Add all RHS expressions to rhs node
+			for (auto *expr : rhsExprs)
+				rhs->addChild(expr);
 			assignNode->addChild(rhs);
+
+			// Error if number of LHS identifiers != number of RHS expressions
+			if (lhsIdentifiers.size() != rhsExprs.size())
+			{
+				error("Assignment count mismatch: " + std::to_string(lhsIdentifiers.size()) +
+					  " variable(s) on LHS, " + std::to_string(rhsExprs.size()) + " value(s) on RHS");
+				throw consumeError();
+			}
 		}
 		catch (const consumeError &)
 		{
