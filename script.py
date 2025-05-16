@@ -1,8 +1,11 @@
 """
 A multi-line docstring at the top of the file
 """
-myTup = (1,2,)
-x,y = 1
+myTup = (1,2)
+#error 1
+#tc1, tc11 = 1
+#error 3
+# tc3 = 1 # extra space
 import math
 x = 1 # a global variable
 class MyClass:
@@ -14,6 +17,12 @@ class MyClass:
     def greet(self):
         # Greet method
         print("hello" + self.name)
+        def inner_function():
+            # Inner function docstring
+            print("This is an inner function")
+#error 6
+#def error_function():
+
 
 def myFunction(x, y=10):
     """
@@ -28,8 +37,12 @@ def myFunction(x, y=10):
     wqt = 5
     fff = "he"
     fff2 = "llo"
+    #error 4
+    #tc4 = 01
     fff3 = fff + fff2
     wrt = 10
+    #error 5
+    #tc5 = 1.2.78
     qq = wqt + wrt 
     print(list3)
     mychar = 'a'
@@ -78,9 +91,10 @@ def main():
     test = True
     test2 = False
     test3 = test | test2
-    # y = x << 2 # This is a bitwise left shift operation
-    # z = y >> 1 # This is a bitwise right shift operation
-    # q = ~y
+    myyy = 1
+    y = myyy << 2 # This is a bitwise left shift operation
+    z = y >> 1 # This is a bitwise right shift operation
+    q = ~y
     seif = -1
     r = 20.5
     r**= 2.5
@@ -93,8 +107,9 @@ def main():
     www = rrrr + sss
     tttttt = 4
     rrrrrr = 5
-    unterminated_string = "This is an unterminated string"
-    unterminated_string_single = 'This is an unterminated string'
+    # error 2
+    # unterminated_string = "This is an unterminated string
+    # unterminated_string_single = 'This is an unterminated string
     qqqqqq,pppppp = tttttt, rrrrrr
     alpha,beta,gamma = 5,6,7
     qwqwqw, rrr = [1, 2], [3, 4]

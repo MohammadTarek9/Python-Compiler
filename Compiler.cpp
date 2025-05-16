@@ -1634,7 +1634,7 @@ public:
 			error("Could not parse block");
 			throw consumeError();
 		}
-		bool isSingleLine = (currentToken().type != TokenType::INDENT);
+		bool isSingleLine = (currentToken().type != TokenType::INDENT && currentToken().lineNumber == tokens[current - 1].lineNumber);
 		int prevLine = currentToken().lineNumber;
 		try
 		{
@@ -2362,7 +2362,7 @@ public:
 				}
 				else
 				{
-					// [arse first expression
+					// parse first expression
 					tupleOrParenNode->addChild(parseExpression());
 
 					// check for comma (tuple)
@@ -2793,6 +2793,7 @@ int main()
 	{
 		cerr << "Error: " << ex.what() << endl;
 		return 1;
+		
 	}
 
 	return 0;
